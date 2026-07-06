@@ -13,6 +13,7 @@ const baseData = {
   value: 4.2,
   unit: 's',
   deltaPct: -3.1,
+  compareLabel: 'vs 14:00',
   trend: [5, 4.8, 4.5, 4.6, 4.3, 4.2],
   status: 'normal' as const,
 };

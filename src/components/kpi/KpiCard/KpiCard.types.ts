@@ -5,6 +5,7 @@ export interface KpiCardData {
   value: number | string;
   unit?: string;
   deltaPct?: number;
+  compareLabel?: string;
   trend?: number[];
   status?: StatusLevel;
   breakdown?: { label: string; count: number; color: string }[];
