@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { TrendLineChart } from './TrendLineChart';
+import { TrendLineChartRecharts } from './TrendLineChart.recharts';
 
 const meta: Meta<typeof TrendLineChart> = {
   title: '📈 Charts/ECharts/TrendLineChart',
@@ -18,3 +19,9 @@ export const Default: Story = { args: { series, xLabels, height: 240 } };
 export const WithWarning: Story = { args: { ...Default.args, error: undefined } };
 export const Loading: Story = { args: { ...Default.args, isLoading: true } };
 export const Empty: Story = { args: { ...Default.args, series: [] } };
+
+export const RechartsVariant: Story = {
+  name: 'recharts (학습 비교)',
+  render: (args) => <TrendLineChartRecharts {...args} />,
+  args: Default.args,
+};

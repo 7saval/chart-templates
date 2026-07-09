@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { DonutRingChart } from './DonutRingChart';
+import { DonutRingChartRecharts } from './DonutRingChart.recharts';
 
 const meta: Meta<typeof DonutRingChart> = {
   title: '📈 Charts/ECharts/DonutRingChart',
@@ -27,3 +28,9 @@ export const WithWarning: Story = {
 };
 export const Loading: Story = { args: { ...Default.args, isLoading: true } };
 export const Empty: Story = { args: { data: [], height: 240 } };
+
+export const RechartsVariant: Story = {
+  name: 'recharts (학습 비교)',
+  render: (args) => <DonutRingChartRecharts {...args} />,
+  args: Default.args,
+};

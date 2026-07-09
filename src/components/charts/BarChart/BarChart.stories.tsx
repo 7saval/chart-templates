@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { BarChart } from './BarChart';
+import { BarChartRecharts } from './BarChart.recharts';
 
 const meta: Meta<typeof BarChart> = {
   title: '📈 Charts/ECharts/BarChart',
@@ -17,3 +18,9 @@ export const WithWarning: Story = {
 };
 export const Loading: Story = { args: { ...Default.args, isLoading: true } };
 export const Empty: Story = { args: { categories: [], values: [], height: 240 } };
+
+export const RechartsVariant: Story = {
+  name: 'recharts (학습 비교)',
+  render: (args) => <BarChartRecharts {...args} />,
+  args: Default.args,
+};

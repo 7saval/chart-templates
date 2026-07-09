@@ -181,7 +181,10 @@ dir src\components\ui
 npm install echarts echarts-for-react recharts d3
 npm install -D @types/d3
 npm install @tanstack/react-table
+npm install @xyflow/react
 ```
+
+> `@xyflow/react`(React Flow)는 Ch2 파이프라인 흐름도(2-5)와 Ch4 Spark Cluster Overview(4-4, Master→Worker 트리)의 `<PipelineFlowDiagram>`에 사용합니다. Ch3/Ch5 브로커·MinIO 토폴로지(`<TopologyDiagram>`)는 계속 `d3-force`로 구현하므로 React Flow 대상이 아닙니다 — 근거는 Phase 5-0 참고.
 
 ### 0-6. Storybook 셋업 (v10)
 
@@ -236,6 +239,7 @@ New-Item -ItemType Directory -Force -Path `
   "src/components/charts/GaugeRing", `
   "src/components/flow/PipelineFlowNode", `
   "src/components/flow/PipelineFlowConnector", `
+  "src/components/flow/PipelineFlowDiagram", `
   "src/components/tables/StatusDataTable", `
   "src/components/tables/AlertEventTable", `
   "src/components/topology/TopologyDiagram", `
@@ -1617,6 +1621,24 @@ Storybook `📋 Tables` 그룹에서 Critical/Warning/Info 탭 클릭 시 목록
 
 ## Phase 5 — 파이프라인 & 토폴로지
 
+### 5-0. 설계 검토 — React Flow(`@xyflow/react`) 도입 여부
+
+이 프로젝트에는 "노드를 선으로 연결해서 보여주는" 화면이 두 가지 성격으로 나뉘어 존재합니다. 둘을 구분해서 다른 방식을 채택합니다.
+
+| | Ch2 파이프라인 흐름도(2-5) / Ch4 Cluster Overview(4-4) | Ch3 Kafka 브로커 토폴로지(3-4) / Ch5 MinIO 토폴로지 |
+|---|---|---|
+| 구조 | 방향성 있는 트리/DAG — Ch2는 소스 5개(KOVIS/XROIS/IRIS/KOTRIS/문서-VOC)가 Adapter → Kafka → Sink → Storage → Spark → Trino → Milvus → Agent로 분기·합류, Ch4는 Master 1개 → Worker N개 단순 fan-out | 방향성 없는 mesh network — 브로커 5개, MinIO 노드 8개가 서로 연결 |
+| 원래 계획 | `PipelineFlowNode`(카드) + `PipelineFlowConnector`(수동 SVG bezier `d3.path()` 계산)를 flex/grid로 직접 배치 (5-1, 5-2) | `d3.forceSimulation`을 `useEffect`에서 돌려 `svg.select(...).join(...)`으로 **DOM을 직접 조작** (5-3) |
+| 원래 계획의 한계 | 커넥터 좌표를 손으로 계산(가이드 5-2도 "지저분한 트릭"이라고 자체적으로 지적), 분기가 있는 DAG일수록 좌표 수작업 부담 증가, pan/zoom 없어 화면보다 넓어지면 잘림 | 노드 수가 적어(5~8개) 실사용상 문제는 적음 — 다만 D3가 React 렌더 트리 바깥에서 직접 DOM을 그리고 지우는 방식이라 선언형 모델과 어긋남 |
+| React Flow 도입 시 | 노드/엣지가 순수 데이터(P2 "props-only reuse"에 부합), `PipelineFlowNode`를 커스텀 노드로 그대로 재사용 가능, pan/zoom/fitView 기본 제공, 필요 시 `dagre`로 자동 레이아웃 추가 가능 | React Flow의 기본 레이아웃은 DAG 지향이라 mesh에는 안 맞음 — 도입하려면 d3-force로 좌표만 계산하고 렌더링만 React Flow로 넘기는 하이브리드가 필요(완전 대체 아님) |
+
+**결정:**
+- **Ch2 / Ch4 → React Flow 도입.** 두 화면 모두 "부모→자식 방향으로 뻗어나가는" 구조라는 공통점이 있으므로, `PipelineFlowDiagram`(5-2b) 컴포넌트 하나를 만들어 두 화면에서 재사용합니다. `PipelineFlowConnector`(5-2, 수동 bezier)는 이 컴포넌트 도입 후 더 이상 쓰지 않아도 되지만, 가이드에는 비교 참고용으로 남겨둡니다.
+- **Ch3 / Ch5 → 기존 `d3-force` 방식 유지.** mesh 토폴로지에는 React Flow가 이득이 크지 않고, 노드 수도 적어 원래 계획(5-3)대로 진행합니다. `useEffect` 안 DOM 직접 조작이 신경 쓰이면 "좌표만 d3-force, 렌더링은 React Flow 커스텀 노드"로 바꾸는 하이브리드를 고려할 수 있지만(5-3 하단 참고), 필수 변경 사항은 아닙니다.
+- 두 다이어그램 모두 **읽기 전용 상태 표시**이므로 React Flow의 편집 기능(`nodesDraggable`, `nodesConnectable`, `elementsSelectable`)은 꺼두고 pan/zoom(`fitView`)만 남깁니다.
+
+> `reactflow` 패키지는 v12부터 `@xyflow/react`로 이름이 바뀌었습니다. 새 패키지명으로 설치하세요(0-5 참고). React Flow를 사용하는 페이지(또는 `main.tsx`)에서 `import '@xyflow/react/dist/style.css';`를 한 번 임포트해야 기본 컨트롤/엣지 스타일이 정상 렌더링됩니다.
+
 ### 5-1. `PipelineFlowNode`
 
 **`PipelineFlowNode.types.ts`**
@@ -1721,6 +1743,124 @@ const path = `M0,${height / 2} C${width * 0.4},${height / 2} ${width * 0.6},${he
 ```
 
 (d3.path()는 노드-링크가 더 복잡해지는 TopologyDiagram에서 본격적으로 사용합니다.)
+
+> `PipelineFlowConnector`는 5-0 결정에 따라 React Flow 도입 후에는 실제로 쓰이지 않습니다(비교 참고용). Ch2/Ch4에는 5-2b `PipelineFlowDiagram`을 사용하세요.
+
+### 5-2b. `PipelineFlowDiagram` (React Flow 조합 — Ch2/Ch4 적용, 5-1/5-2 대체)
+
+5-0에서 결정한 대로 Ch2 파이프라인 흐름도(2-5)와 Ch4 Spark Cluster Overview(4-4, Master→Worker 트리)는 이 컴포넌트 하나로 조립합니다. `PipelineFlowNode`(5-1)는 그대로 재사용하고, 커넥터만 React Flow의 내장 edge로 대체합니다.
+
+**`PipelineFlowDiagram.types.ts`**
+
+```typescript
+import type { Node, Edge } from '@xyflow/react';
+import type { PipelineFlowNodeProps } from '@/components/flow/PipelineFlowNode/PipelineFlowNode.types';
+
+export type PipelineFlowNodeType = Node<PipelineFlowNodeProps, 'pipelineNode'>;
+
+export interface PipelineFlowEdgeData {
+  isBottleneck?: boolean;
+}
+
+export type PipelineFlowEdgeType = Edge<PipelineFlowEdgeData>;
+
+export interface PipelineFlowDiagramProps {
+  nodes: PipelineFlowNodeType[];
+  edges: PipelineFlowEdgeType[];
+  height?: number;
+}
+```
+
+**`PipelineFlowDiagram.tsx`**
+
+```tsx
+import { ReactFlow, Background, Controls, Handle, Position } from '@xyflow/react';
+import type { NodeProps } from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import { PipelineFlowNode } from '@/components/flow/PipelineFlowNode';
+import type { PipelineFlowDiagramProps, PipelineFlowNodeType } from './PipelineFlowDiagram.types';
+
+function FlowNodeRenderer({ data }: NodeProps<PipelineFlowNodeType>) {
+  return (
+    <>
+      <Handle type="target" position={Position.Top} className="border-0! bg-transparent!" />
+      <PipelineFlowNode {...data} />
+      <Handle type="source" position={Position.Bottom} className="border-0! bg-transparent!" />
+    </>
+  );
+}
+
+const nodeTypes = { pipelineNode: FlowNodeRenderer };
+
+export function PipelineFlowDiagram({ nodes, edges, height = 360 }: PipelineFlowDiagramProps) {
+  const styledEdges = edges.map((e) => ({
+    ...e,
+    type: 'smoothstep',
+    animated: e.data?.isBottleneck === true,
+    style: {
+      stroke: e.data?.isBottleneck ? '#ef4444' : '#334155',
+      strokeWidth: 2,
+      strokeDasharray: e.data?.isBottleneck ? '4 3' : undefined,
+    },
+    labelStyle: { fill: '#94a3b8', fontSize: 10 },
+    labelBgStyle: { fill: '#1e293b' },
+  }));
+
+  return (
+    <div style={{ height }}>
+      <ReactFlow
+        nodes={nodes}
+        edges={styledEdges}
+        nodeTypes={nodeTypes}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable={false}
+        panOnScroll
+        zoomOnScroll={false}
+        proOptions={{ hideAttribution: true }}
+        fitView
+      >
+        <Background color="#1e293b" gap={24} />
+        <Controls showInteractive={false} />
+      </ReactFlow>
+    </div>
+  );
+}
+```
+
+**적용 예 1 — Ch2 파이프라인 흐름도** (좌우 방향, `Handle`을 `Position.Left`/`Position.Right`로 바꿔서 사용): 소스 5개(KOVIS/XROIS/IRIS/KOTRIS/문서-VOC)가 같은 x열에서 y만 분산되도록 좌표를 잡고, Adapter → Kafka → Sink → Storage → Spark → Trino → Milvus → Agent 순으로 x를 증가시킵니다. 노드/엣지 수가 늘어나 좌표를 손으로 잡기 부담스러워지면 `npm install dagre @types/dagre` 후 `dagre.layout()`으로 `position`을 자동 계산하는 것을 검토하세요.
+
+**적용 예 2 — Ch4 Spark Cluster Overview** (위→아래 방향, 위 코드 그대로): Master 노드 1개를 상단 중앙에 두고, Worker 노드 N개를 하단에 균등 간격으로 배치합니다.
+
+```tsx
+// src/mocks/spark.mock.ts (발췌)
+import type { PipelineFlowNodeType, PipelineFlowEdgeType } from '@/components/flow/PipelineFlowDiagram/PipelineFlowDiagram.types';
+
+export const sparkClusterNodes: PipelineFlowNodeType[] = [
+  { id: 'master', type: 'pipelineNode', position: { x: 300, y: 0 }, data: {
+    name: 'Spark Master (Primary)', status: 'normal',
+    metrics: [{ label: 'Uptime', value: '25d 14h' }, { label: 'CPU', value: '18%' }, { label: 'MEM', value: '28%' }],
+  } },
+  ...['Worker-01', 'Worker-02', 'Worker-03', 'Worker-04'].map((name, i) => ({
+    id: `worker-${i + 1}`, type: 'pipelineNode' as const, position: { x: i * 200, y: 160 },
+    data: {
+      name, status: 'normal' as const,
+      metrics: [{ label: 'Executors', value: 10 }, { label: 'Cores', value: '40 / 80GB' }, { label: 'CPU', value: '26%' }],
+    },
+  })),
+];
+
+export const sparkClusterEdges: PipelineFlowEdgeType[] = ['1', '2', '3', '4'].map((n) => ({
+  id: `master-worker-${n}`, source: 'master', target: `worker-${n}`,
+}));
+```
+
+```tsx
+// src/pages/Spark.tsx (Cluster Overview 섹션 발췌)
+<SectionPanel title="Spark Cluster Overview">
+  <PipelineFlowDiagram nodes={sparkClusterNodes} edges={sparkClusterEdges} height={280} />
+</SectionPanel>
+```
 
 ### 5-3. `TopologyDiagram` (D3 force layout)
 
@@ -1861,9 +2001,12 @@ export const MinioNodes: Story = {
 };
 ```
 
+> **선택 사항(하이브리드):** 위 구현은 D3가 React 렌더 트리 바깥에서 직접 DOM을 그리고 지우는 방식이라 신경 쓰인다면, 좌표 계산만 `d3-force`에 맡기고 렌더링은 React Flow 커스텀 노드로 넘기는 방식도 가능합니다 — `useEffect`에서 `simulation.tick()`을 정적으로 여러 번 돌려 얻은 `{x, y}`를 React Flow `nodes[].position`에 매핑하면 됩니다. 다만 브로커(5개)·MinIO(8개)처럼 노드 수가 적을 때는 이런 전환의 이득이 크지 않으므로, 5-0 결정대로 **필수 변경 사항은 아닙니다.**
+
 ### Phase 5 완료 체크
 
-Storybook에서 `KafkaBrokers`/`MinioNodes` 스토리를 열어 노드를 드래그했을 때 위치가 물리 시뮬레이션을 따라 자연스럽게 재배치되는지 확인.
+- Storybook에서 `KafkaBrokers`/`MinioNodes` 스토리를 열어 노드를 드래그했을 때 위치가 물리 시뮬레이션을 따라 자연스럽게 재배치되는지 확인 (`TopologyDiagram`, d3-force).
+- `PipelineFlowDiagram` 스토리(Ch2용 분기 흐름도, Ch4용 Master→Worker 트리)를 열어 `fitView`로 전체가 화면에 맞춰지고, 노드가 드래그되지 않으며(읽기 전용), 다이어그램이 컨테이너보다 넓을 때 pan으로 좌우 이동이 되는지 확인.
 
 ---
 
@@ -2083,6 +2226,7 @@ export * from './components/charts/GaugeRing';
 
 export * from './components/flow/PipelineFlowNode';
 export * from './components/flow/PipelineFlowConnector';
+export * from './components/flow/PipelineFlowDiagram';
 
 export * from './components/tables/StatusDataTable';
 export * from './components/tables/AlertEventTable';
@@ -2112,7 +2256,8 @@ Phase 2  SparklineChart → TrendLineChart → BarChart → StackedBarChart
          → DonutRingChart → GaugeRing (각 + 4종 Story)
 Phase 3  각 차트에 *.recharts.tsx 추가 + RechartsVariant Story
 Phase 4  StatusDataTable → AlertEventTable (각 + Story)
-Phase 5  PipelineFlowNode → PipelineFlowConnector → TopologyDiagram (+ Kafka/MinIO Story)
+Phase 5  (5-0: React Flow 도입 검토) → PipelineFlowNode → PipelineFlowConnector → PipelineFlowDiagram(React Flow, Ch2/Ch4용)
+         → TopologyDiagram(d3-force 유지, Ch3/Ch5용) (+ Kafka/MinIO Story)
 Phase 6  react-router-dom 설치 → App.tsx 라우팅 → useAutoRefresh
          → Home/Kafka/Spark/PpsMinIO.tsx 조립 → src/index.ts re-export
 ```
