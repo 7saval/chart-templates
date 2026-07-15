@@ -1,0 +1,25 @@
+{
+  "name": "storydoc-ai",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "AST-based component metadata extraction PoC for Storybook doc/story drafting (Week 1: parser only)",
+  "bin": {
+    "storydoc-ai": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/cli.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "react-docgen-typescript": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.2",
+    "tsx": "^4.23.1",
+    "typescript": "~6.0.2"
+  }
+}
