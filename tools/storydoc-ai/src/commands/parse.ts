@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import type { Command } from 'commander';
 import { REPO_ROOT, TOOL_DIR } from '../paths.js';
 import { createParser, parseComponent } from '../parser/index.js';
+import { toComponentMetadata } from '../metadata.js';
 
 interface ParseCommandOptions {
   out: string;
@@ -33,23 +34,8 @@ export function registerParseCommand(program: Command) {
 
         try {
           const doc = parseComponent(parser, absolutePath);
-          const dump = {
-            component: doc.displayName,
-            sourceFile: path.relative(REPO_ROOT, absolutePath),
-            description: doc.description,
-            props: Object.values(doc.props ?? {}).map((prop) => ({
-              name: prop.name,
-              // `type.name` collapses to "enum" for any union (including plain
-              // `boolean`, which TS represents internally as `true | false`) once
-              // shouldExtractValuesFromUnion is on — `type.raw` keeps the original,
-              // human-readable type text instead.
-              type: prop.type?.raw ?? prop.type?.name ?? null,
-              required: prop.required,
-              defaultValue: prop.defaultValue?.value ?? null,
-              description: prop.description,
-            })),
-            extractedAt: new Date().toISOString(),
-          };
+          const metadata = toComponentMetadata(doc, path.relative(REPO_ROOT, absolutePath));
+          const dump = { ...metadata, extractedAt: new Date().toISOString() };
 
           const outFile = path.join(outDir, `${doc.displayName}.json`);
           await fs.writeFile(outFile, JSON.stringify(dump, null, 2), 'utf-8');

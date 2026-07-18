@@ -1,0 +1,24 @@
+import { Meta, Canvas, Story } from '@storybook/addon-docs/blocks';
+import * as PipelineFlowDiagramStories from './PipelineFlowDiagram.stories';
+
+<Meta of={PipelineFlowDiagramStories} />
+
+# PipelineFlowDiagram
+
+`PipelineFlowDiagram` renders a node-and-edge diagram representing the stages and
+connections of a data pipeline (for example producers, brokers, consumers, and the
+links between them). It accepts a set of `nodes` and `edges` describing the graph
+topology, and an optional `height` to control the rendered size of the diagram
+canvas within its container.
+
+## Props
+
+| Name | Type | Required | Default |
+|------|------|----------|---------|
+| `nodes` | `PipelineFlowNodeType[]` | yes | - |
+| `edges` | `PipelineFlowEdgeType[]` | yes | - |
+| `height` | `number` | no | 360 |
+
+## Default
+
+<Canvas of={PipelineFlowDiagramStories.Default} />

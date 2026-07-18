@@ -1,5 +1,6 @@
 import type { Preview } from '@storybook/react-vite'
 import '@/index.css'
+import '@xyflow/react/dist/style.css'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 const preview: Preview = {
@@ -14,7 +15,7 @@ const preview: Preview = {
   },
   decorators: [
     (Story) => (
-      <div className="dark min-h-screen bg-background p-6 text-foreground">
+      <div className="dark bg-background p-6 text-foreground">
         <TooltipProvider>
           <Story />
         </TooltipProvider>

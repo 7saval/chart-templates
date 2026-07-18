@@ -219,7 +219,7 @@ export const Empty: Story = {
 | 문서화율 | (Storybook 문서가 존재하는 컴포넌트 수) / (전체 컴포넌트 수) — chart-templates 기준 분모는 21 |
 | 초안 채택률 | 초안 대비 최종 머지본의 변경 비율 (git diff 라인 수 기반, 참고 지표) |
 
-### 실측 대상: chart-templates 자체 컴포넌트 21개
+### 실측 대상: chart-templates 자체 컴포넌트 (정정: 실제 처리 가능은 19개)
 
 `src/components/` 하위 실제 폴더 기준 (2026-07-14 현재):
 
@@ -231,10 +231,12 @@ layout/     DashboardShell, PipelineStageTimeline, SectionPanel, SideNav, TopHea
 misc/       MiniStatCell, RankedList                                                                 (2)
 tables/     AlertEventTable, StatusDataTable                                                         (2)
 topology/   TopologyDiagram                                                                          (1)
-                                                                                          합계: 21개
+                                                                                          폴더 합계: 22개
 ```
 
-원안의 "10~20개 실제 적용"보다 범위를 넓혀, **이 레포에 실제로 존재하는 컴포넌트 21개 전량**을 파일럿 대상으로 삼는다 — 표본을 임의로 줄이지 않아야 문서화율 수치가 조작처럼 보이지 않는다.
+> **[4주차 착수 전 정정, 2026-07-18]** 위 폴더별 개수(6+3+3+5+2+2+1)를 더하면 **22개**인데 원안에는 "합계: 21개"로 잘못 적혀 있었다(산수 오류). 또한 이 중 **`misc/MiniStatCell`, `misc/RankedList`, `topology/TopologyDiagram` 3개는 폴더만 존재하고 `.tsx` 구현 자체가 없다**(3주차 전수 조사로 확인 — 완전히 빈 폴더). `react-docgen-typescript` 기반 파서는 실제 소스 코드가 있어야만 동작하므로 이 3개는 StoryDoc AI의 실행 대상이 될 수 없다. 따라서 **실제로 문서화 파이프라인을 돌릴 수 있는 컴포넌트는 19개**다(22 − 3). 4주차 지표는 "21개"(원안, 오류) 대신 **"22개 카탈로그 / 19개 구현·처리 대상 / 3개 미구현(범위 밖)"**으로 보고한다 — 표본을 임의로 줄인 게 아니라 실제 상태를 있는 그대로 반영한 것.
+
+원안의 "10~20개 실제 적용"보다 범위를 넓혀, **이 레포에 실제로 구현된 컴포넌트 19개 전량**을 파일럿 대상으로 삼는다 — 표본을 임의로 줄이지 않아야 문서화율 수치가 조작처럼 보이지 않는다.
 
 ---
 
@@ -268,9 +270,38 @@ topology/   TopologyDiagram                                                     
 
 ### 4주차 — 실측 + 정리
 
-- [ ] chart-templates 21개 컴포넌트 전체에 적용
-- [ ] Before/After 시간, 문서화율 실측 후 표로 정리
-- [ ] README + 데모 영상/GIF 정리
+**상태: 설계 완료, 착수 전** (2026-07-18 — 사용자 지시로 실제 배치 실행/코드 구현은 보류, 설계 내용만 우선 기록)
+
+**대상 정정**: "21개 전체"가 아니라 **19개**(위 6장 정정 참고). `misc/MiniStatCell`, `misc/RankedList`, `topology/TopologyDiagram`은 미구현이라 제외.
+
+**설계 결정**
+
+1. 19개 컴포넌트 경로는 글롭 자동 탐색이 아니라 전수 조사 결과를 `tools/storydoc-ai/src/catalog.ts`에 명시적으로 하드코딩한다. `.recharts.tsx` 같은 보조 파일이 잘못 섞여 들어가는 걸 방지하고, 사람이 검증한 목록을 코드에 그대로 남기는 게 자동 탐색보다 투명함. 새 컴포넌트 추가 시 이 파일을 사람이 업데이트.
+2. 각 컴포넌트의 "중첩/제네릭 타입 위험" 여부도 `catalog.ts`에 함께 기록한다(자동 판별 아님, 사람이 `.types.ts`를 직접 읽고 분류). `react-docgen-typescript`는 타입 별칭을 재귀적으로 펼치지 않아서, prop 타입이 다른 인터페이스/제네릭을 참조하면 LLM이 내부 구조를 못 보고 지어낼 위험이 있음 — 3주차에서 `PipelineFlowDiagram`에 실제로 발생(9장 리스크 참고). 전수 조사 결과:
+   - **고위험(11개, named/generic 타입 참조)**: DonutRingChart, StackedBarChart, TrendLineChart, PipelineFlowDiagram, KpiCard, KpiCardCompound, ProgressKpiCard, PipelineStageTimeline, SideNav, AlertEventTable, StatusDataTable
+   - **중위험(3개, 인라인 객체/ReactNode)**: PipelineFlowNode, SectionPanel, DashboardShell
+   - **저위험(5개, 원시 타입 위주)**: BarChart, GaugeRing, SparklineChart, PipelineFlowConnector, TopHeader
+3. `generate.ts`의 파이프라인(파싱→프롬프트→API 호출→렌더링→파일쓰기)을 `src/pipeline.ts`의 `generateComponent()` 함수로 추출해서, 단일 실행용 `generate`와 신규 배치용 `generate-all` 커맨드가 재사용(중복 제거 — 지금까지 매 주차 반복해온 패턴).
+4. `generate-all`은 컴포넌트별 try/catch로 하나 실패해도 나머지는 계속 처리(1주차 `parse` 커맨드와 동일 패턴). 종료 후 `.output/report.json`(기계 판독용) + `.output/report.md`(사람이 읽을 표) 생성.
+5. **"컴포넌트당 문서 작성 시간(Before)"과 "초안 채택률"은 이번 주차에서 실측하지 않는다** — 지어내지 않고 "실측 불가"로 명시한다. Before는 실제 사람이 수동으로 문서를 작성한 시간 데이터가 없고(7장도 "임의로 채우면 안 됨"이라 명시), 채택률은 아직 어떤 컴포넌트도 실제로 병합된 적이 없어(3주차까지는 diff 산출물만 만들고 병합은 안 함) 측정 대상 자체가 없음. 대신 실측 가능한 것만 정확히 보고한다: 컴포넌트당 초안 생성 시간(After), MDX 문서화율 Before(0/19 — 이번 세션 파일럿 2개 제외 시)/After.
+
+**파일 계획**
+
+- `src/catalog.ts` — 19개 컴포넌트 `{path, riskyProps?}` 목록
+- `src/pipeline.ts` — `generateComponent(componentPath, options)` (`generate.ts`에서 추출)
+- `src/commands/generate.ts` — `generateComponent()` 호출로 교체(동작 동일)
+- `src/commands/generateAll.ts` — `storydoc-ai generate-all` 신규 커맨드
+- `src/cli.ts` — `generate-all` 등록
+- `tools/storydoc-ai/README.md` — 단일/배치 실행법 문서화
+
+**체크리스트**
+
+- [ ] `catalog.ts` / `pipeline.ts` / `generateAll.ts` / README 구현
+- [ ] 나머지 17개 컴포넌트 API 호출(비용 발생) — **실행 직전 별도 확인 필요**
+- [ ] `generate-all` 실행 → `.output/report.md` 확인
+- [ ] 고위험군 1~2개(예: KpiCard, StatusDataTable)는 실제 타입과 대조해 사람이 직접 검증
+- [ ] Before/After 문서화율, 컴포넌트당 생성 시간 실측치를 표로 정리(Before 수동 시간·채택률은 "실측 불가"로 명시)
+- [ ] README + 데모 GIF 정리(GIF는 스크린 레코딩 필요 — AI 도구 범위 밖, 별도 준비 필요)
 - [ ] 7장 포트폴리오 문장에 실측치 반영
 
 ---
@@ -282,7 +313,9 @@ topology/   TopologyDiagram                                                     
 | AI 생성 문서가 사실과 다른 설명을 만들어낼 가능성(hallucination) | 초안은 항상 사람 리뷰 후 머지, CI는 코멘트만 남기고 자동 커밋 금지 |
 | props 타입만으로는 "왜 이 prop이 필요한지" 맥락 파악 불가 | 컴포넌트 폴더 내 기존 JSDoc/README가 있으면 우선 few-shot에 포함해 맥락 보강 |
 | 폐쇄망용 로컬 sLLM의 structured output 품질이 Claude 대비 떨어질 가능성 | 어댑터 경계는 미리 잡되, 로컬 모델 성능 검증은 이번 4주 일정에서 제외(범위 외로 명시) |
-| 21개 전량 실측 시 API 비용 | 1주차 PoC 단계에서 컴포넌트 2~3개로 토큰 사용량 먼저 측정 후 전체 실행 여부 판단 |
+| 중첩/제네릭 타입을 재귀적으로 못 펼쳐서 LLM이 내부 구조를 지어내는 문제(**실제 발생**) | `react-docgen-typescript`가 타입 별칭을 opaque 문자열로만 넘김 → `PipelineFlowDiagram`에서 `nodes: PipelineFlowNodeType[]`(실제로는 `@xyflow/react`의 `Node<PipelineFlowNodeProps,"pipelineNode">`)의 내부 구조(`data` 래핑 등)를 LLM이 못 보고 `label` 등 존재하지 않는 필드를 지어냄 → 사람이 직접 실제 타입 정의 확인 후 수정. 19개 중 11개가 이 위험군(8장 4주차 계획 참고) — 배치 실행 결과는 이 컴포넌트들 위주로 사람이 추가 검증 필요 |
+| 3주차 실사용 중 발견된 Storybook/MDX 설정 버그 3건 | ① `@storybook/blocks`(존재하지 않는 패키지) 지시 → `@storybook/addon-docs/blocks`로 수정. ② 레포에 `remark-gfm` 미설정으로 마크다운 표 렌더링 실패 → `.storybook/main.ts`에 설정 추가. ③ MDX `<Meta title=... of=...>` 동시 사용 시 인덱스 중복 충돌 → `of`만 사용하도록 수정. 프롬프트(`buildPrompt.ts`)에도 반영해 재발 방지 |
+| 19개 전량 실측 시 API 비용 | 1주차 PoC 단계에서 컴포넌트 2~3개로 토큰 사용량 먼저 측정 후 전체 실행 여부 판단 (원안 "21개"는 산수 오류 — 실제 처리 대상 19개로 정정, 6장 참고) |
 
 ---
 

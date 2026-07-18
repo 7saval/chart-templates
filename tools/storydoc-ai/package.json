@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "AST-based component metadata extraction PoC for Storybook doc/story drafting (Week 1: parser only)",
+  "description": "AST-based component metadata extraction + Claude-generated Storybook doc/story drafting CLI",
   "bin": {
     "storydoc-ai": "./dist/cli.js"
   },
@@ -14,7 +14,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.112.3",
     "commander": "^15.0.0",
+    "diff": "^9.0.0",
+    "dotenv": "^17.4.2",
+    "prettier": "^3.9.5",
     "react-docgen-typescript": "^2.4.0"
   },
   "devDependencies": {
