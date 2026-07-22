@@ -2582,6 +2582,302 @@ export const MinioNodes: Story = {
 
 ---
 
+## Phase 5b — 기타 시각화 컴포넌트 (`MiniStatCell`, `RankedList`)
+
+> `_docs/dev-log/2026-07-18.md`에서 폴더만 있고 코드가 없다고 확인된 3개 중 `TopologyDiagram`(Phase 5-3)에 이어 나머지 2개를 처리합니다.
+> `PLANNING.md` 7-6절에는 목적/난이도만 있고 props 계약이 없어서, `dl-ops-dashboard` 스킬 문서(ch1~ch5)에 흩어진 실사용처를 먼저 조사해 아래 5b-0에서 설계를 확정한 뒤 구현합니다.
+
+### 5b-0. 설계 검토 — props 계약을 어떻게 정할 것인가
+
+**`MiniStatCell` 실사용처 조사 (ch3/ch4/ch5):**
+
+| 화면 | 항목 | 값의 성격 |
+| --- | --- | --- |
+| Ch3 Kafka (3-5→3-6) | Leader Election(1H), Rebalance Events(1H) | 순수 카운트 |
+| Ch3 Kafka (3-5→3-6) | Replication Health%, Controller Health | 퍼센트/상태 — 색상 필요 |
+| Ch3 Kafka (3-9) | Segment Storage(Total/Used/Segments), Log & Retention(Log Size/Retention/Cleanup) | 단위 붙은 값, 3~4개가 한 줄에 나열 |
+| Ch4 Spark (4-4) | Applications/Executors/Cores/Total Memory | 카운트 + 단위 |
+| Ch4 Spark (4-7→4-9) | Trino Refresh Status(Active Queries/Avg Runtime/Queued) | 카운트+시간 혼합 |
+| Ch4 Spark (4-12) | Small File Compaction state, Cluster Overall Health | 상태 텍스트 — 색상 필요 |
+| Ch5 PPS/MinIO (5-6) | Replication State, Erasure Coding Health, Slow/Failed Requests% | 상태/퍼센트 — 색상 필요 |
+| Ch5 PPS/MinIO (5-7) | Stale Tables, Small File Tables, Active Readers/Writers | 카운트 |
+
+공통점: **"라벨 하나 + 값 하나"**를 그리드로 여러 개 나열. 값은 순수 숫자·단위 붙은 숫자·상태 텍스트 세 종류가 섞여 있고, 그중 상태 계열만 색상이 필요합니다. `PLANNING.md` 7-6절이 "Badge (선택)"이라고 적어둔 것도 이 상태 계열 때문입니다. → **`status?: StatusLevel`을 선택 prop으로 두고, 있을 때만 값 텍스트에 `STATUS_COLORS`를 적용**하는 것으로 결정. 그리드 배치(몇 열로 나열할지)는 컴포넌트 책임이 아니라 각 화면에서 `SectionPanel` 안에 `grid grid-cols-N`으로 감싸는 쪽 책임입니다(P4 "화면 이름 하드코딩 금지" 원칙).
+
+**`RankedList` 실사용처 조사 (ch2/ch3/ch5):**
+
+| 화면 | 항목 | 값의 성격 |
+| --- | --- | --- |
+| Ch2 Home (2-8) | Recent Top-5 Query Ranking | 쿼리 텍스트 + 카운트 |
+| Ch3 Kafka (3-2/3-4 주변) | Consumer Groups list(그룹명+Lag) | 이름 + 숫자, **lag 높을수록 위험도 색상** |
+| Ch3 Kafka (3-2/3-4 주변) | Sinks/Downstream list(대상명+상태) | 이름 + **상태 텍스트**(색상) |
+| Ch5 PPS/MinIO (5-8→5-11) | Top Writers (1h) table | 이름 + 카운트/단위 |
+
+공통점: **"이름 + 값"** 쌍을 순위 순서(호출자가 이미 정렬해서 넘김)로 나열하고 Top-N으로 자릅니다. 값도 MiniStatCell과 마찬가지로 순수 숫자/단위 붙은 값/상태 텍스트가 섞여 있어 항목 단위(`RankedListItem`)로 `status?: StatusLevel`을 선택적으로 둡니다. 정렬 자체는 컴포넌트가 하지 않고(모의 데이터·API 응답이 이미 정렬된 상태로 옴), `maxItems`로 자르는 것만 책임집니다.
+
+**결정 요약:**
+
+- 두 컴포넌트 모두 `status?: StatusLevel`로 상태 계열 값에만 `STATUS_COLORS`를 적용하고, 나머지는 `text-foreground`/`text-muted-foreground` 뉴트럴 톤을 씁니다.
+- `MiniStatCell`은 단일 값 셀 하나, `RankedList`는 `RankedListItem[]`을 받는 목록 — 그리드/카드 배치는 소비하는 화면(`SectionPanel` 내부)이 담당합니다.
+- 둘 다 `isLoading`만 지원합니다(다른 misc가 아닌 카드 컴포넌트들과 동일하게 `Skeleton` 처리). 별도 `error` prop은 두지 않습니다 — 이 정도 크기의 셀에서 별도 에러 상태 UI는 과합니다(`PLANNING.md` 7-6 난이도 ★☆☆에도 부합).
+
+### 5b-1. `MiniStatCell`
+
+**`MiniStatCell.types.ts`**
+
+```typescript
+import type { StatusLevel } from "@/tokens/colors";
+
+export interface MiniStatCellProps {
+  label: string;
+  value: number | string;
+  unit?: string;
+  status?: StatusLevel;
+  isLoading?: boolean;
+}
+```
+
+**`MiniStatCell.tsx`**
+
+```tsx
+import { Skeleton } from "@/components/ui/skeleton";
+import { STATUS_COLORS } from "@/tokens/colors";
+import type { MiniStatCellProps } from "./MiniStatCell.types";
+
+export function MiniStatCell({
+  label,
+  value,
+  unit,
+  status,
+  isLoading,
+}: MiniStatCellProps) {
+  if (isLoading) {
+    return (
+      <div className="space-y-1.5">
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-5 w-12" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-[11px] text-muted-foreground">{label}</span>
+      <span
+        className="text-base font-semibold text-foreground"
+        style={status ? { color: STATUS_COLORS[status] } : undefined}
+      >
+        {value}
+        {unit && (
+          <span className="ml-1 text-xs text-muted-foreground">{unit}</span>
+        )}
+      </span>
+    </div>
+  );
+}
+```
+
+**`index.ts`**
+
+```typescript
+export { MiniStatCell } from "./MiniStatCell";
+export type { MiniStatCellProps } from "./MiniStatCell.types";
+```
+
+**`MiniStatCell.stories.tsx`**
+
+```tsx
+import type { Meta, StoryObj } from "@storybook/react";
+import { MiniStatCell } from "./MiniStatCell";
+
+const meta: Meta<typeof MiniStatCell> = {
+  title: "🧩 Misc/MiniStatCell",
+  component: MiniStatCell,
+};
+export default meta;
+type Story = StoryObj<typeof MiniStatCell>;
+
+export const Default: Story = {
+  args: { label: "Leader Election (1H)", value: 2 },
+};
+export const WithUnit: Story = {
+  args: { label: "Replication Health", value: 98.4, unit: "%", status: "normal" },
+};
+export const Critical: Story = {
+  args: { label: "Slow/Failed Requests", value: 12.3, unit: "%", status: "critical" },
+};
+export const Loading: Story = {
+  args: { label: "Controller Health", value: "-", isLoading: true },
+};
+
+// Ch4 Spark Cluster stats block(4-4)처럼 여러 개를 그리드로 나열하는 실사용 예
+export const Grid: Story = {
+  render: () => (
+    <div className="grid grid-cols-4 gap-4">
+      <MiniStatCell label="Applications" value={18} />
+      <MiniStatCell label="Executors" value={42} />
+      <MiniStatCell label="Cores" value={168} />
+      <MiniStatCell label="Total Memory" value={512} unit="GB" />
+    </div>
+  ),
+};
+```
+
+### 5b-2. `RankedList`
+
+**`RankedList.types.ts`**
+
+```typescript
+import type { StatusLevel } from "@/tokens/colors";
+
+export interface RankedListItem {
+  label: string;
+  value: number | string;
+  unit?: string;
+  status?: StatusLevel;
+}
+
+export interface RankedListProps {
+  items: RankedListItem[];
+  maxItems?: number;
+  isLoading?: boolean;
+  emptyMessage?: string;
+}
+```
+
+**`RankedList.tsx`**
+
+```tsx
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { STATUS_COLORS } from "@/tokens/colors";
+import type { RankedListProps } from "./RankedList.types";
+
+export function RankedList({
+  items,
+  maxItems = 5,
+  isLoading,
+  emptyMessage = "No data",
+}: RankedListProps) {
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: maxItems }, (_, i) => (
+          <Skeleton key={i} className="h-6 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  const ranked = items.slice(0, maxItems);
+
+  if (ranked.length === 0) {
+    return (
+      <div className="py-4 text-center text-sm text-muted-foreground">
+        {emptyMessage}
+      </div>
+    );
+  }
+
+  return (
+    <ol className="space-y-1.5">
+      {ranked.map((item, i) => (
+        <li
+          key={item.label}
+          className="flex items-center justify-between gap-2 text-sm"
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="w-4 shrink-0 text-xs text-muted-foreground">
+              {i + 1}
+            </span>
+            <span className="truncate text-foreground">{item.label}</span>
+          </div>
+          {item.status ? (
+            <Badge
+              style={{ backgroundColor: STATUS_COLORS[item.status] }}
+              className="shrink-0 text-white"
+            >
+              {item.value}
+              {item.unit}
+            </Badge>
+          ) : (
+            <span className="shrink-0 text-muted-foreground">
+              {item.value}
+              {item.unit}
+            </span>
+          )}
+        </li>
+      ))}
+    </ol>
+  );
+}
+```
+
+**`index.ts`**
+
+```typescript
+export { RankedList } from "./RankedList";
+export type { RankedListItem, RankedListProps } from "./RankedList.types";
+```
+
+**`RankedList.stories.tsx`**
+
+```tsx
+import type { Meta, StoryObj } from "@storybook/react";
+import { RankedList } from "./RankedList";
+
+const meta: Meta<typeof RankedList> = {
+  title: "🧩 Misc/RankedList",
+  component: RankedList,
+};
+export default meta;
+type Story = StoryObj<typeof RankedList>;
+
+// Ch5 5-8→5-11 "Top Writers (1h)"
+export const TopWriters: Story = {
+  args: {
+    items: [
+      { label: "iceberg-sink-c1", value: 1240, unit: " writes/h" },
+      { label: "iceberg-sink-c2", value: 980, unit: " writes/h" },
+      { label: "iceberg-sink-c3", value: 640, unit: " writes/h" },
+    ],
+  },
+};
+
+// Ch3 "Consumer Groups list" — lag 높을수록 위험도 색상
+export const ConsumerGroupsByLag: Story = {
+  args: {
+    items: [
+      { label: "cg-orders", value: "520,000", status: "critical" },
+      { label: "cg-payments", value: "210,000", status: "warning" },
+      { label: "cg-inventory", value: "12,000", status: "normal" },
+    ],
+  },
+};
+
+// Ch3 "Sinks/Downstream list" — 이름 + 상태 텍스트
+export const DownstreamStatus: Story = {
+  args: {
+    items: [
+      { label: "milvus-writer", value: "Connected", status: "normal" },
+      { label: "trino-refresh", value: "Degraded", status: "warning" },
+      { label: "backup-sink", value: "Offline", status: "critical" },
+    ],
+  },
+};
+
+export const Loading: Story = { args: { items: [], isLoading: true } };
+export const Empty: Story = { args: { items: [] } };
+```
+
+### Phase 5b 완료 체크
+
+- Storybook `🧩 Misc/MiniStatCell`의 `Grid` 스토리에서 4개 셀이 한 줄로 나열되고, `Critical` 스토리에서 값 색상이 `STATUS_COLORS.critical`(빨강)로 바뀌는지 확인.
+- Storybook `🧩 Misc/RankedList`의 `ConsumerGroupsByLag`/`DownstreamStatus` 스토리에서 항목별 `status`에 따라 Badge 색상이 개별적으로 바뀌는지, `maxItems` 기본값(5)보다 적은 3개 항목을 넣었을 때 잘리지 않고 그대로 나오는지 확인.
+- 두 컴포넌트 모두 `Loading` 스토리에서 `Skeleton`이 정상 렌더링되는지 확인.
+
+---
+
 ## Phase 6 — 4개 대시보드 화면 조립
 
 ### 6-1. 라우팅 설치
