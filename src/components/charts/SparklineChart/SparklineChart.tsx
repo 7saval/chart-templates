@@ -13,7 +13,20 @@ export function SparklineChart({ data, height = 32, status = 'info' }: Sparkline
       smooth: true,
       symbol: 'none',
       lineStyle: { color: STATUS_COLORS[status], width: 1.5 },
-      areaStyle: { color: STATUS_COLORS[status], opacity: 0.15 },
+      areaStyle: {
+        opacity: 0.35,
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: STATUS_COLORS[status] },
+            { offset: 1, color: 'transparent' },
+          ],
+        },
+      },
     }],
   };
 

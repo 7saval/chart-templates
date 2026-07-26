@@ -11,4 +11,5 @@ export interface PipelineFlowDiagramProps {
   nodes: PipelineFlowNodeType[];
   edges: PipelineFlowEdgeType[];
   height?: number;
+  direction?: "vertical" | "horizontal";
 }

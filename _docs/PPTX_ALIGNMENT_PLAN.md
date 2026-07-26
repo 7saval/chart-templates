@@ -18,10 +18,11 @@
    ★ 기본값: **화면 폭에 따라 5~6열로 확대**(반응형 유지, 완전히 목업과 동일한 8열까지는 안 감 — 실제 브라우저 폭에서 카드 텍스트가 너무 좁아짐).
 4. **글로우/네온 이펙트를 CSS 박스섀도우 수준으로만 흉내낼지, 목업처럼 애니메이션 그라디언트 라인까지 구현할지.**
    ★ 기본값: **정적 글로우(box-shadow + border 그라디언트)만** — 애니메이션 흐름 라인은 성능/구현 난이도 대비 효과가 작다고 판단.
+   > **번복 (2026-07-26)**: `PipelineStageTimeline`에 한해 애니메이션 흐름 라인까지 구현했다. Phase C-3에서 실현 가능성을 다시 검토한 결과 구현 난이도가 낮다고 판단됐고, 이후 실제 목업 이미지 대조 결과 유량을 "선 개수"로 표현하는 것이 핵심 디테일이라 정적 글로우만으로는 대체가 안 됐다. 자세한 내용은 Phase C 참고.
 
 ---
 
-## Phase A — 디자인 토큰 확장 (글로우, 밀도, 색상)
+## Phase A — 디자인 토큰 확장 (글로우, 밀도, 색상) ✅ 구현 완료 (2026-07-26)
 
 **목표**: 컴포넌트 코드를 건드리기 전에 토큰 레벨에서 목업 톤을 낼 수 있는 재료를 먼저 준비한다.
 
@@ -46,9 +47,11 @@
 
 **완료 기준**: Storybook에서 기존 스토리들이 색만 살짝 진해질 뿐 레이아웃 깨짐 없이 렌더링.
 
+> ✅ A-1(글로우 토큰)은 `color-mix(in srgb, var(--status-*) 50%, transparent)`로 구현(스펙의 하드코딩 hsl 대신 기존 `--status-*` 변수 재사용, `inactive` 레벨도 추가). A-2(`SectionPanel compact`)·A-3(`SparklineChart` 그라디언트) 모두 스펙대로 구현 완료.
+
 ---
 
-## Phase B — `TopHeader` 부가 기능 추가
+## Phase B — `TopHeader` 부가 기능 추가 ✅ 구현 완료 (2026-07-26)
 
 **목표**: 목업 헤더의 4개 누락 요소(클러스터 선택기 / 날짜 범위 피커 / 시간 단위 퀵버튼 / System Response) 추가.
 
@@ -84,9 +87,11 @@ export interface TopHeaderProps {
 
 **완료 기준**: Storybook `TopHeader` 스토리에 `WithCluster`/`WithoutCluster` 2종 추가, 브라우저에서 4개 페이지 헤더가 목업과 동일한 요소를 갖추는지 확인.
 
+> ✅ `dateRange`는 `{from: string; to: string}` 대신 `{from: Date; to: Date}`로 구현(shadcn `Calendar`가 `Date` 객체 기반이라 타입을 맞춤). 라우트 전환 시 `cluster` 값이 새 `clusterOptions`에 없으면 빈 값으로 보이는 버그를 발견해 `App.tsx`에서 폴백 로직 추가(문제 3, 7/26 devlog 참고).
+
 ---
 
-## Phase C — `PipelineStageTimeline` 시각 강화
+## Phase C — `PipelineStageTimeline` 시각 강화 ✅ 구현 완료 (2026-07-26)
 
 **목표**: 아이콘 + 글로우 연결선 + 하위 상태 dot 행 추가.
 
@@ -111,9 +116,57 @@ export interface PipelineStage {
 
 **완료 기준**: 기존 호출부(`Home.tsx`의 `homeStages` 등, `icon`/`nodeStatuses` 없이 호출)가 그대로 동작 — breaking change 없음.
 
+### C-3. 연결선 흐름 애니메이션 + 유량 표현 (검토 완료, 2026-07-26)
+
+**결론**: React Flow가 아니라 순수 SVG로 구현. `PipelineFlowDiagram`(React Flow 기반)은 `animated: true`로 흐름 애니메이션이 내장돼 있지만, 이 컴포넌트는 노드 5~8개짜리 단순 수평 배열이라 라이브러리 오버헤드가 불필요 — 이미 같은 패턴을 쓰는 `PipelineFlowConnector.tsx`(SVG `<path>` + 화살표 마커)를 확장하는 쪽이 신규 의존성 없이 더 가볍다.
+
+- C-2의 연결선(`bg-gradient-to-r` div)을 SVG `<path>`로 교체 — `PipelineFlowConnector` 패턴 재사용.
+- **흐르는 애니메이션**: `stroke-dasharray` + `stroke-dashoffset` CSS keyframe(`index.css`에 `@keyframes flow-dash` 추가). `tw-animate-css`가 이미 설치돼 있어 신규 패키지 불필요. `prefers-reduced-motion`일 때 애니메이션 정지 처리 필요.
+- **데이터 양 → 선의 굵기/밀도**: `stage.count`를 도메인으로 `strokeWidth`를 스케일링(예: 1.5~6px 클램프). 대시 밀도·애니메이션 속도도 같이 비례시키면 "흐르는 양"이 더 체감됨.
+- 색상은 신규 토큰 없이 기존 `STATUS_COLORS` 재사용.
+
+**유량 기준 결론 (2026-07-26)**: `count`(개체 수)를 재사용하지 않고 별도 `volume` optional 필드를 추가한다.
+
+- 일반적인 파이프라인 유량 모니터링(Kafka Manager, Confluent Control Center, Grafana 등)에서는 **처리량(throughput)** — 초당 레코드 수(`msg/s`) 또는 초당 바이트(`MB/s`) — 를 선 굵기/흐름 밀도로 표현한다. 컨슈머 랙(backlog) 같은 적체 지표는 "병목"을 뜻하므로 굵기가 아니라 색상(빨강 강조)으로 별도 표시하는 게 일반적.
+- 이 프로젝트의 `PipelineStage.count`는 실제로는 **개체 수**다 — `kafka.mock.ts` 기준 Partition 612, Broker 5, Consumer Group 45처럼 "몇 개 있냐"이지 "초당 얼마나 흐르냐"가 아니다. 파티션이 많다고 그 구간에 데이터가 더 흐르는 건 아니므로 선 굵기 소스로 재사용하면 의미가 어긋난다.
+- `kafka.mock.ts`에는 이미 처리량 지표가 별도로 존재한다: `Cluster Throughput 842 MB/s`, `producer-cdc-kovis 420 msg/s`, 토픽별 `throughput: "62 MB/s"` 등. `volume` 필드는 **해당 스테이지에서 다음 스테이지로 초당 흘러가는 처리량(msg/s 또는 MB/s)** 을 가리키며, 각 페이지 mock에 이미 있는 throughput 값을 재사용해서 채운다.
+
+```ts
+export interface PipelineStage {
+  name: string;
+  count: number;
+  status: StatusLevel;
+  volume?: number; // 신규, optional — 다음 스테이지로의 처리량(msg/s 또는 MB/s), 연결선 굵기/흐름 밀도에 사용
+}
+```
+
+**남은 미결정 사항 결론 (2026-07-26)**
+
+- **단위(`msg/s`/`MB/s`) 통일 여부 → 혼용 유지.** mock 데이터를 확인해보면 같은 페이지 안에서도 스테이지 성격에 따라 단위가 이미 다르다 — `kafka.mock.ts`는 producer가 `msg/s`, 토픽/클러스터가 `MB/s`; `pps-minio.mock.ts`는 MinIO가 `GB/s`; `spark.mock.ts`는 ETL 스테이지가 `Rows/s`. 이건 실수가 아니라 스테이지의 실제 성격을 반영한 자연스러운 단위이며, 하나로 강제 통일하려면 "메시지 1개=몇 바이트" 같은 임의의 환산 가정이 필요한데 어떤 mock에도 그런 모델이 없다. 그래서 `volume`은 기존 mock 컨벤션(`{ label, value, unit }`)과 동일하게 `{ value: number; unit: string }`로 유지하고, 선 굵기는 절대값이 아니라 **같은 타임라인 안 스테이지들끼리의 상대적 min-max 스케일**로 계산한다 — 단위가 달라도 "이 안에서 상대적으로 굵은가"만 표현하면 되므로 문제되지 않는다.
+- **마지막 스테이지의 `volume` 처리 → 별도 분기 불필요.** 현재 렌더링 로직(`i < stages.length - 1`일 때만 커넥터 렌더)은 항상 "현재 순회 중인 stage(source)"를 기준으로 커넥터를 그린다. `volume`을 **source stage 기준(= 이 스테이지가 다음 스테이지로 내보내는 처리량)** 으로 정의하면 lookahead 없이 `stage.volume`만 읽으면 되어 구현이 단순해지고, `producer-cdc-kovis 420 msg/s`처럼 기존 throughput 표기도 "이 노드가 뭘 내보내는지" 기준이라 의미적으로도 일치한다. 마지막 스테이지는 애초에 그 뒤에 그릴 커넥터가 없으므로 `volume` 값이 있든 없든 읽히지 않는다 — 무시/사용 여부를 별도로 분기할 필요가 없다.
+
+```ts
+export interface PipelineStage {
+  name: string;
+  count: number;
+  status: StatusLevel;
+  volume?: { value: number; unit: string }; // 신규, optional — 다음 스테이지로의 처리량(source 기준), 연결선 굵기는 타임라인 내 상대(min-max) 스케일로 계산
+}
+```
+
+### C-4. 실제 구현 결과 — 스펙에서 두 차례 더 진화 (2026-07-26)
+
+위 C-3 스펙(고정폭 SVG `<path>` + `strokeWidth` 스케일링)으로 1차 구현한 뒤, 실사용 과정에서 두 가지가 더 바뀌었다.
+
+- **고정폭 SVG → `flex-1` 가변폭 CSS 라인**: 노드 개수가 적은 화면(Home 5개 스테이지)에서 커넥터가 고정 48px라 전체가 왼쪽으로 뭉쳐 보이는 문제가 발견돼, SVG `<path>` 대신 `flex-1` div + CSS 그라디언트/`repeating-linear-gradient` 배경으로 재구현. 노드 개수와 무관하게 항상 컨테이너 폭을 꽉 채운다.
+- **선 굵기 스케일링 → 선 개수(1~5개) 스케일링**: `_docs/DataPipeLineDashboard.pptx` 원본 이미지를 직접 열어 대조한 결과, 목업은 굵기가 변하는 선 하나가 아니라 **가는 선 여러 개가 다발로 흐르는 스트림**이었다. 유량을 `strokeWidth`가 아니라 **선 개수**(`Math.round(scale(metric, min, max, 1, 5))`)로 매핑하도록 재구현했고, 화살표도 채워진 삼각형에서 목업과 같은 `›` 모양 outline chevron으로 교체.
+- 구현 중 SVG 관련 버그 2건도 발견해 수정: 마커가 `strokeWidth`에 비례 확대되던 문제(`markerUnits="userSpaceOnUse"`), 완전 수평선이라 `objectBoundingBox` 그라디언트가 무효 처리되던 문제(`gradientUnits="userSpaceOnUse"`). 최종 구현(다발 스트림)은 이 문제들 자체를 SVG stroke 대신 CSS 배경으로 대체하며 우회했다.
+
+자세한 트러블슈팅은 `_docs/dev-log/2026-07-26.md` 참고.
+
 ---
 
-## Phase D — `PipelineFlowDiagram` 가로 흐름 지원 (Home 2-5)
+## Phase D — `PipelineFlowDiagram` 가로 흐름 지원 (Home 2-5) ✅ 구현 완료 (2026-07-26)
 
 **목표**: Home 2-5를 목업처럼 좌→우 가로 배치로 전환. 가장 손이 많이 가는 항목.
 
@@ -170,9 +223,11 @@ col7 (x=1480): AI AGENT
 
 **완료 기준**: Storybook에서 `PipelineFlowDiagram`에 `Horizontal`/`Vertical` 스토리 2종 추가. Home 2-5가 세로 스크롤 대신 가로로 넓게 배치되는지 브라우저 확인. Spark 4-4(세로)가 기존과 동일하게 렌더링되는지 회귀 확인.
 
+> ✅ 스펙대로 구현. `nodeTypes` 객체를 렌더마다 새로 만들면 React Flow가 매번 새 타입으로 인식하는 문제가 있어 `useMemo`로 감싸는 처리가 추가로 필요했다. Spark 4-4 회귀 없음, Home 2-5 가로 배치 브라우저 확인 완료.
+
 ---
 
-## Phase E — 카드 밀도 상향 (KPI 그리드 등)
+## Phase E — 카드 밀도 상향 (KPI 그리드 등) ✅ 구현 완료 (2026-07-26)
 
 **목표**: Open Decision #3 기본값(5~6열)에 맞춰 각 페이지의 `grid-cols-N`을 조정.
 
@@ -182,9 +237,11 @@ col7 (x=1480): AI AGENT
 
 **완료 기준**: Home/Kafka/Spark/PPS-MinIO 4개 페이지의 전체 스크롤 높이가 기존 대비 눈에 띄게 줄어드는지(정성적 확인) + 브라우저 좁은 폭(1280px)에서도 카드 내용이 깨지지 않는지 확인.
 
+> ✅ "KPI 카드 그리드"로 주석된 섹션만 `grid-cols-2 md:grid-cols-4 xl:grid-cols-6` 반응형으로 확대(스펙의 `md:grid-cols-3 lg:grid-cols-6` 대신 실제 항목 수에 맞춰 조정 — 항목이 3개뿐인 Home 메인 KPI는 컬럼을 늘려봐야 빈 칸만 늘어서 그대로 둠). 모든 `SectionPanel`에 `compact` 적용. **미완료**: 1280px 좁은 폭 실측은 `resize_window` 도구가 이 환경에서 뷰포트를 바꾸지 못해 못 했음(구조적으로 기존보다 안전하다고 판단은 했음).
+
 ---
 
-## Phase F — `TopologyDiagram` 정보 밀도 보강
+## Phase F — `TopologyDiagram` 정보 밀도 보강 ✅ 구현 완료 (2026-07-26, 가운데 정렬 수정 포함)
 
 **목표**: Open Decision #2 기본값(d3-force 유지)에 맞춰 레이아웃은 그대로 두고 배지만 보강.
 
@@ -193,9 +250,13 @@ col7 (x=1480): AI AGENT
 
 **완료 기준**: Kafka/PPS-MinIO 페이지의 토폴로지 노드에 CPU/MEM/DISK 3종 배지가 모두 표시되는지 확인. **컴포넌트 코드 변경 불필요** — mock 데이터 확장만으로 끝나는 가장 가벼운 Phase.
 
+> ✅ "컴포넌트 코드 변경 불필요" 전제가 실제와 달랐다 — `TopologyDiagram.tsx`가 `badges` 타입만 갖고 있고 실제로는 렌더링하지 않아서 d3 `<text class="badge">` 로직을 새로 추가해야 했다. mock(CPU/MEM/DISK 3종)과 컴포넌트 렌더링 모두 완료.
+>
+> **추가 작업 (스펙 외, 2026-07-26)**: Kafka "Broker Cluster Topology"/PPS-MinIO "MinIO Cluster Topology"가 넓은 패널 안에서 고정폭 SVG라 왼쪽으로 쏠려 보이는 문제를 발견해 `<div className="flex justify-center">`로 감싸 가운데 정렬. 겸사겸사 tick 핸들러의 baseline `any` 타입 4건도 `SimLink = d3.SimulationLinkDatum<SimNode>` 타입 신설로 근본 수정(7/23 devlog부터 이월되던 이슈).
+
 ---
 
-## Phase G — 사이드바 아이콘/톤 정리 (선택)
+## Phase G — 사이드바 아이콘/톤 정리 (선택) ✅ 구현 완료 (2026-07-26, 폭 축소 포함)
 
 Open Decision #1 기본값(4항목 유지)에 따라 메뉴 자체는 늘리지 않되:
 
@@ -204,20 +265,26 @@ Open Decision #1 기본값(4항목 유지)에 따라 메뉴 자체는 늘리지 
 
 **완료 기준**: Storybook `SideNav` 스토리 시각 확인.
 
+> ✅ 이모지 → lucide 아이콘 교체 시, `SideNav.stories.tsx`가 이미 `Home/MessageSquare/Zap/Database` 조합을 쓰고 있던 걸 발견해 그 컨벤션에 맞춰 통일. active 상태 글로우 적용도 완료.
+>
+> **추가 작업 (스펙 외, 2026-07-26)**: 사이드바를 PPTX 목업처럼 아이콘 위·라벨 아래 세로 배치의 좁은 레일 형태로 바꿔달라는 별도 요청을 받아, `SideNav.tsx` 버튼을 `flex flex-col items-center`로 전환하고 `DashboardShell.tsx`의 사이드바 컬럼 폭을 `240px → 84px`로 축소(Open Decision #1 "4항목 유지"는 그대로, 폭만 축소).
+
 ---
 
 ## 진행 순서 요약
 
 ```
-Phase A  디자인 토큰(글로우/밀도/그라디언트) 준비        — 다른 Phase의 전제조건
-Phase B  TopHeader 부가 기능(클러스터/날짜/시간버튼)      — 독립적, A 이후 아무때나
-Phase C  PipelineStageTimeline 시각 강화                — A 이후
-Phase D  PipelineFlowDiagram 가로 흐름 (Home 2-5)        — 가장 큰 작업, 단독 진행 가능
-Phase E  카드 밀도 상향 (그리드 열 수, compact 옵션)      — A 이후, 전 페이지 영향
-Phase F  TopologyDiagram 배지 보강                       — mock 데이터만, 아무때나 (가장 가벼움)
-Phase G  사이드바 아이콘/톤 (선택)                        — A 이후, 우선순위 낮음
+Phase A  디자인 토큰(글로우/밀도/그라디언트) 준비        — 다른 Phase의 전제조건                    ✅ 완료 (2026-07-26)
+Phase B  TopHeader 부가 기능(클러스터/날짜/시간버튼)      — 독립적, A 이후 아무때나                   ✅ 완료 (2026-07-26)
+Phase C  PipelineStageTimeline 시각 강화                — A 이후                                  ✅ 완료 (2026-07-26)
+Phase D  PipelineFlowDiagram 가로 흐름 (Home 2-5)        — 가장 큰 작업, 단독 진행 가능              ✅ 완료 (2026-07-26)
+Phase E  카드 밀도 상향 (그리드 열 수, compact 옵션)      — A 이후, 전 페이지 영향                    ✅ 완료 (2026-07-26, 1280px 실측 미완료)
+Phase F  TopologyDiagram 배지 보강                       — mock 데이터만, 아무때나 (가장 가벼움)      ✅ 완료 (2026-07-26)
+Phase G  사이드바 아이콘/톤 (선택)                        — A 이후, 우선순위 낮음                     ✅ 완료 (2026-07-26)
 ```
 
 Phase F(가장 가벼움) → Phase B/C(독립적) → Phase A 필요 시 병행 → Phase D(가장 무거움) → Phase E → Phase G 순으로 체감 임팩트 대비 비용이 낮은 것부터 처리하는 것을 권장.
 
 각 Phase 종료 시 `npm run storybook`(컴포넌트 단위 회귀 확인) + `npm run dev`(통합 화면에서 목업과 스크린샷 대조)를 번갈아 확인한다.
+
+**전체 7개 Phase 구현 완료 (2026-07-26)**. 상세 진행 로그는 `_docs/dev-log/2026-07-26.md` 참고. 남은 항목: Phase E의 1280px 좁은 폭 실측, 레포 전역 `storybook/no-renderer-packages` lint 정리 여부 판단.

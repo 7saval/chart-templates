@@ -28,7 +28,7 @@ export default function Home() {
   return (
     <div className="space-y-4">
       {/* 2-1: 파이프라인 전체 개요 */}
-      <SectionPanel title="Pipeline Overview">
+      <SectionPanel compact title="Pipeline Overview">
         <PipelineStageTimeline stages={homeStages} />
       </SectionPanel>
 
@@ -40,12 +40,17 @@ export default function Home() {
       </div>
 
       {/* 2-5: 실시간 데이터 파이프라인 흐름도 */}
-      <SectionPanel title="Real-time Data Pipeline Flow">
-        <PipelineFlowDiagram nodes={homeFlowNodes} edges={homeFlowEdges} height={520} />
+      <SectionPanel compact title="Real-time Data Pipeline Flow">
+        <PipelineFlowDiagram
+          nodes={homeFlowNodes}
+          edges={homeFlowEdges}
+          direction="horizontal"
+          height={420}
+        />
       </SectionPanel>
 
       {/* 2-6: 트래픽/처리량 트렌드 */}
-      <SectionPanel title="Traffic & Throughput Trend">
+      <SectionPanel compact title="Traffic & Throughput Trend">
         <TrendLineChart
           series={homeTrend.series}
           xLabels={homeTrend.xLabels}
@@ -68,23 +73,23 @@ export default function Home() {
             <KpiCard key={kpi.label} data={kpi} />
           ))}
         </div>
-        <SectionPanel title="Recent Top-5 Query Ranking">
+        <SectionPanel compact title="Recent Top-5 Query Ranking">
           <RankedList items={homeTopQueries} />
         </SectionPanel>
       </div>
 
       {/* 2-9: 컨테이너 리소스 사용량 */}
-      <SectionPanel title="Container Resource Usage">
+      <SectionPanel compact title="Container Resource Usage">
         <StatusDataTable columns={homeContainerColumns} data={homeContainerRows} />
       </SectionPanel>
 
       {/* 2-10: PPS Adapter/Agent 상태 */}
-      <SectionPanel title="PPS Adapter/Agent Status">
+      <SectionPanel compact title="PPS Adapter/Agent Status">
         <StatusDataTable columns={homeAdapterColumns} data={homeAdapterRows} />
       </SectionPanel>
 
       {/* 2-11: 최근 알림 */}
-      <SectionPanel title="Recent Alerts">
+      <SectionPanel compact title="Recent Alerts">
         <AlertEventTable events={homeAlerts} showAckColumn />
       </SectionPanel>
     </div>

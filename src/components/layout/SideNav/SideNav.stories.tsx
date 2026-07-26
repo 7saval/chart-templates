@@ -7,7 +7,7 @@ const meta: Meta<typeof SideNav> = {
   component: SideNav,
   decorators: [
     (Story) => (
-      <div className="h-80 w-56">
+      <div className="h-80 w-21">
         <Story />
       </div>
     ),

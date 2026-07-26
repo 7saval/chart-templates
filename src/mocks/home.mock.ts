@@ -66,6 +66,7 @@ export const homeStages = [
 ];
 
 // 2-5. Real-time Data Pipeline Flow Diagram — Data Source → Adapter → Kafka → Iceberg Sink → MinIO → Spark → Trino/Milvus → AI Agent
+// 좌→우 가로 배치 (Phase D). 컬럼: col0=DATA SOURCE, col1=PPS ADAPTER, col2=KAFKA, col3=ICEBERG SINK, col4=MinIO, col5=SPARK, col6=TRINO/Milvus, col7=AI AGENT
 export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "src-kovis",
@@ -76,25 +77,25 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "src-xrois",
     type: "pipelineNode",
-    position: { x: 190, y: 0 },
+    position: { x: 0, y: 130 },
     data: { name: "XROIS", status: "normal", metrics: [{ label: "rec/s", value: 95 }] },
   },
   {
     id: "src-iris",
     type: "pipelineNode",
-    position: { x: 380, y: 0 },
+    position: { x: 0, y: 260 },
     data: { name: "IRIS", status: "normal", metrics: [{ label: "rec/s", value: 60 }] },
   },
   {
     id: "src-kotris",
     type: "pipelineNode",
-    position: { x: 570, y: 0 },
+    position: { x: 0, y: 390 },
     data: { name: "KOTRIS", status: "normal", metrics: [{ label: "rec/s", value: 40 }] },
   },
   {
     id: "src-voc",
     type: "pipelineNode",
-    position: { x: 760, y: 0 },
+    position: { x: 0, y: 520 },
     data: {
       name: "문서-VOC",
       status: "normal",
@@ -104,7 +105,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "adapter-cdc",
     type: "pipelineNode",
-    position: { x: 285, y: 150 },
+    position: { x: 220, y: 170 },
     data: {
       name: "Adapter-CDC",
       status: "normal",
@@ -115,7 +116,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "adapter-dlhwp",
     type: "pipelineNode",
-    position: { x: 620, y: 150 },
+    position: { x: 220, y: 430 },
     data: {
       name: "Adapter-DLHWP",
       status: "normal",
@@ -125,31 +126,31 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "kafka-realtime",
     type: "pipelineNode",
-    position: { x: 285, y: 300 },
+    position: { x: 440, y: 170 },
     data: { name: "Kafka RealTime Topics", status: "normal", metrics: [{ label: "msg/s", value: 2_400 }] },
   },
   {
     id: "kafka-batch",
     type: "pipelineNode",
-    position: { x: 620, y: 300 },
+    position: { x: 440, y: 430 },
     data: { name: "Kafka Batch Topics", status: "normal", metrics: [{ label: "msg/s", value: 180 }] },
   },
   {
     id: "iceberg-c1",
     type: "pipelineNode",
-    position: { x: 285, y: 450 },
+    position: { x: 660, y: 170 },
     data: { name: "Iceberg Sink (C1)", status: "normal", metrics: [{ label: "write/h", value: 1_240 }] },
   },
   {
     id: "iceberg-c2",
     type: "pipelineNode",
-    position: { x: 620, y: 450 },
+    position: { x: 660, y: 430 },
     data: { name: "PPS Agent DLHWP (C2)", status: "warning", metrics: [{ label: "Lag", value: "210,000" }] },
   },
   {
     id: "minio",
     type: "pipelineNode",
-    position: { x: 450, y: 600 },
+    position: { x: 880, y: 300 },
     data: {
       name: "MinIO/NAS",
       status: "normal",
@@ -159,7 +160,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "spark",
     type: "pipelineNode",
-    position: { x: 450, y: 750 },
+    position: { x: 1080, y: 300 },
     data: {
       name: "SPARK",
       status: "normal",
@@ -169,13 +170,13 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "trino",
     type: "pipelineNode",
-    position: { x: 300, y: 900 },
+    position: { x: 1280, y: 220 },
     data: { name: "TRINO", status: "normal", metrics: [{ label: "qps", value: 42 }, { label: "state", value: "running" }] },
   },
   {
     id: "milvus",
     type: "pipelineNode",
-    position: { x: 600, y: 900 },
+    position: { x: 1280, y: 380 },
     data: {
       name: "Vector DB (Milvus)",
       status: "warning",
@@ -185,7 +186,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "ai-agent",
     type: "pipelineNode",
-    position: { x: 450, y: 1050 },
+    position: { x: 1480, y: 300 },
     data: { name: "AI Agent/RAG Search", status: "normal", metrics: [{ label: "qps", value: 9 }] },
   },
 ];

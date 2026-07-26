@@ -1,3 +1,4 @@
+import { CalendarIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,7 +13,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { TopHeaderProps } from "./TopHeader.types";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import type { TopHeaderProps, TopHeaderTimeUnit } from "./TopHeader.types";
+
+const TIME_UNITS: TopHeaderTimeUnit[] = ["5m", "15m", "1H", "6H", "1D"];
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 export function TopHeader({
   env,
@@ -24,6 +35,15 @@ export function TopHeader({
   autoRefresh,
   onAutoRefreshChange,
   lastRefresh,
+  cluster,
+  clusterOptions,
+  onClusterChange,
+  dateRange,
+  onDateRangeChange,
+  timeUnit,
+  onTimeUnitChange,
+  systemResponseMs,
+  operatorName,
 }: TopHeaderProps) {
   return (
     <header className="flex items-center justify-between border-b border-border bg-card px-6 py-3">
@@ -55,9 +75,66 @@ export function TopHeader({
             ))}
           </SelectContent>
         </Select>
+        {clusterOptions && (
+          <Select value={cluster} onValueChange={onClusterChange}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Cluster" />
+            </SelectTrigger>
+            <SelectContent>
+              {clusterOptions.map((o) => (
+                <SelectItem key={o} value={o}>
+                  {o}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {onDateRangeChange && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <CalendarIcon className="size-3.5" />
+                {dateRange
+                  ? `${formatDate(dateRange.from)} - ${formatDate(dateRange.to)}`
+                  : "Date range"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={dateRange}
+                onSelect={(range) =>
+                  range?.from &&
+                  range?.to &&
+                  onDateRangeChange({ from: range.from, to: range.to })
+                }
+              />
+            </PopoverContent>
+          </Popover>
+        )}
+        {onTimeUnitChange && (
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size="sm"
+            value={timeUnit}
+            onValueChange={(v) => v && onTimeUnitChange(v as TopHeaderTimeUnit)}
+          >
+            {TIME_UNITS.map((u) => (
+              <ToggleGroupItem key={u} value={u} className="text-xs">
+                {u}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        )}
       </div>
 
       <div className="flex items-center gap-4">
+        {systemResponseMs !== undefined && (
+          <span className="text-xs text-muted-foreground">
+            System Response {(systemResponseMs / 1000).toFixed(1)}s
+          </span>
+        )}
         <span className="text-xs text-muted-foreground">
           Last refresh: {lastRefresh}
         </span>
@@ -66,7 +143,12 @@ export function TopHeader({
           <span className="text-xs text-muted-foreground">Auto Refresh</span>
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger className="h-8 w-8 rounded-full bg-status-info" />
+          <DropdownMenuTrigger className="flex items-center gap-2">
+            <span className="h-8 w-8 rounded-full bg-status-info" />
+            {operatorName && (
+              <span className="text-xs text-foreground">{operatorName}</span>
+            )}
+          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Sign out</DropdownMenuItem>

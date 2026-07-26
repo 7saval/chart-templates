@@ -55,6 +55,11 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
+    --shadow-glow-normal: 0 0 12px -2px color-mix(in srgb, var(--status-normal) 50%, transparent);
+    --shadow-glow-warning: 0 0 12px -2px color-mix(in srgb, var(--status-warning) 50%, transparent);
+    --shadow-glow-critical: 0 0 12px -2px color-mix(in srgb, var(--status-critical) 50%, transparent);
+    --shadow-glow-info: 0 0 12px -2px color-mix(in srgb, var(--status-info) 50%, transparent);
+    --shadow-glow-inactive: 0 0 12px -2px color-mix(in srgb, var(--status-inactive) 50%, transparent);
 }
 
 :root {
@@ -148,6 +153,23 @@
     --lag-caution: hsl(25 95% 53%);
     --lag-warning: hsl(347 77% 50%);
     --lag-critical: hsl(0 84% 60%);
+}
+
+@keyframes flow-bg {
+  to {
+    background-position-x: -16px;
+  }
+}
+
+.pipeline-flow-line {
+  background-repeat: repeat-x;
+  animation: flow-bg linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pipeline-flow-line {
+    animation: none;
+  }
 }
 
 @layer base {

@@ -25,3 +25,38 @@ export const WithCritical: Story = {
 };
 
 export const Empty: Story = { args: { stages: [] } };
+
+export const WithVolumeAndStatusDots: Story = {
+  args: {
+    stages: [
+      {
+        name: "Producer",
+        count: 36,
+        status: "normal",
+        volume: { value: 420, unit: "msg/s" },
+        nodeStatuses: ["normal", "normal", "warning", "normal"],
+      },
+      {
+        name: "Topic",
+        count: 128,
+        status: "normal",
+        volume: { value: 842, unit: "MB/s" },
+        nodeStatuses: ["normal", "normal", "normal"],
+      },
+      {
+        name: "Partition",
+        count: 612,
+        status: "normal",
+        volume: { value: 62, unit: "MB/s" },
+      },
+      {
+        name: "Consumer Group",
+        count: 45,
+        status: "warning",
+        volume: { value: 8, unit: "MB/s" },
+        nodeStatuses: ["normal", "warning"],
+      },
+      { name: "Sink", count: 28, status: "normal" },
+    ],
+  },
+};

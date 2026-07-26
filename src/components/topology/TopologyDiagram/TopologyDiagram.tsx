@@ -4,6 +4,7 @@ import type { TopologyDiagramProps } from "./TopologyDiagram.types";
 import { STATUS_COLORS } from "@/tokens/colors";
 
 type SimNode = TopologyDiagramProps["nodes"][number] & d3.SimulationNodeDatum;
+type SimLink = d3.SimulationLinkDatum<SimNode>;
 export function TopologyDiagram({
   nodes,
   edges,
@@ -18,15 +19,15 @@ export function TopologyDiagram({
     svg.selectAll("*").remove();
 
     const simNodes: SimNode[] = nodes.map((n) => ({ ...n }));
-    const simLinks = edges.map((e) => ({ ...e }));
+    const simLinks: SimLink[] = edges.map((e) => ({ ...e }));
 
     const simulation = d3
       .forceSimulation(simNodes)
       .force(
         "link",
         d3
-          .forceLink(simLinks)
-          .id((d: SimNode) => d.id)
+          .forceLink<SimNode, SimLink>(simLinks)
+          .id((d) => d.id)
           .distance(120),
       )
       .force("charge", d3.forceManyBody().strength(-300))
@@ -34,7 +35,7 @@ export function TopologyDiagram({
 
     const link = svg
       .append("g")
-      .selectAll("line")
+      .selectAll<SVGLineElement, SimLink>("line")
       .data(simLinks)
       .join("line")
       .attr("stroke", "#334155")
@@ -67,12 +68,23 @@ export function TopologyDiagram({
       .attr("fill", "#e2e8f0")
       .attr("font-size", 11);
 
+    node
+      .selectAll("text.badge")
+      .data((d) => d.badges ?? [])
+      .join("text")
+      .attr("class", "badge")
+      .text((b) => `${b.label} ${b.value}`)
+      .attr("text-anchor", "middle")
+      .attr("dy", (_b, i) => 54 + i * 12)
+      .attr("fill", "#94a3b8")
+      .attr("font-size", 9);
+
     simulation.on("tick", () => {
       link
-        .attr("x1", (d: any) => d.source.x)
-        .attr("y1", (d: any) => d.source.y)
-        .attr("x2", (d: any) => d.target.x)
-        .attr("y2", (d: any) => d.target.y);
+        .attr("x1", (d) => (d.source as SimNode).x ?? 0)
+        .attr("y1", (d) => (d.source as SimNode).y ?? 0)
+        .attr("x2", (d) => (d.target as SimNode).x ?? 0)
+        .attr("y2", (d) => (d.target as SimNode).y ?? 0);
       node.attr("transform", (d) => `translate(${d.x},${d.y})`);
     });
 
@@ -81,5 +93,9 @@ export function TopologyDiagram({
     };
   }, [nodes, edges, width, height]);
 
-  return <svg ref={svgRef} width={width} height={height} />;
+  return (
+    <div className="flex justify-center">
+      <svg ref={svgRef} width={width} height={height} />
+    </div>
+  );
 }

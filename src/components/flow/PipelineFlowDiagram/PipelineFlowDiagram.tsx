@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Background,
   Controls,
@@ -12,29 +13,40 @@ import type {
 } from "./PipelineFlowDiagram.types";
 import { PipelineFlowNode } from "../PipelineFlowNode";
 
-function FlowNodeRenderer({ data }: NodeProps<PipelineFlowNodeType>) {
+function FlowNodeRenderer({
+  data,
+  direction,
+}: NodeProps<PipelineFlowNodeType> & { direction: "vertical" | "horizontal" }) {
   return (
     <>
       <Handle
         type="target"
-        position={Position.Top}
+        position={direction === "horizontal" ? Position.Left : Position.Top}
         className="border-0! bg-transparent!"
       />
       <PipelineFlowNode {...data} />
       <Handle
         type="source"
-        position={Position.Bottom}
+        position={direction === "horizontal" ? Position.Right : Position.Bottom}
         className="border-0! bg-transparent!"
       />
     </>
   );
 }
-const nodeTypes = { pipelineNode: FlowNodeRenderer };
 export function PipelineFlowDiagram({
   nodes,
   edges,
   height = 360,
+  direction = "vertical",
 }: PipelineFlowDiagramProps) {
+  const nodeTypes = useMemo(
+    () => ({
+      pipelineNode: (props: NodeProps<PipelineFlowNodeType>) => (
+        <FlowNodeRenderer {...props} direction={direction} />
+      ),
+    }),
+    [direction],
+  );
   const styleEdges = edges.map((e) => ({
     ...e,
     type: "smoothstep",

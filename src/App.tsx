@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Home as HomeIcon, MessageSquare, Zap, Database } from "lucide-react";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { DashboardShell } from "./components/layout/DashboardShell";
 import { TopHeader } from "./components/layout/TopHeader";
@@ -10,19 +11,34 @@ import Home from "./pages/Home";
 import Kafka from "./pages/Kafka";
 import Spark from "./pages/Spark";
 import PpsMinIO from "./pages/PpsMinIO";
+import type { TopHeaderTimeUnit } from "./components/layout/TopHeader/TopHeader.types";
 
 const NAV_ITEMS = [
-  { id: "/", label: "Home", icon: <span>🏠</span> },
-  { id: "/kafka", label: "Kafka", icon: <span>📨</span> },
-  { id: "/spark", label: "Spark", icon: <span>⚡</span> },
-  { id: "/pps-minio", label: "PPS/MinIO", icon: <span>🪣</span> },
+  { id: "/", label: "Home", icon: <HomeIcon className="size-4" /> },
+  { id: "/kafka", label: "Kafka", icon: <MessageSquare className="size-4" /> },
+  { id: "/spark", label: "Spark", icon: <Zap className="size-4" /> },
+  { id: "/pps-minio", label: "PPS/MinIO", icon: <Database className="size-4" /> },
 ];
+
+const CLUSTER_OPTIONS_BY_ROUTE: Record<string, string[] | undefined> = {
+  "/": undefined,
+  "/kafka": ["kafka-prod"],
+  "/spark": ["spark-prod"],
+  "/pps-minio": ["all"],
+};
 
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [autoRefresh, setAutoRefresh] = useState(true);
   const lastRefresh = useAutoRefresh(autoRefresh, 5000);
+  const [clusterState, setCluster] = useState("kafka-prod");
+  const [timeUnit, setTimeUnit] = useState<TopHeaderTimeUnit>("15m");
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>();
+  const clusterOptions = CLUSTER_OPTIONS_BY_ROUTE[location.pathname];
+  const cluster = clusterOptions?.includes(clusterState)
+    ? clusterState
+    : clusterOptions?.[0];
 
   return (
     <TooltipProvider>
@@ -38,6 +54,15 @@ export default function App() {
             onAutoRefreshChange={setAutoRefresh}
             lastRefresh={lastRefresh}
             pipeline="all"
+            cluster={cluster}
+            clusterOptions={clusterOptions}
+            onClusterChange={setCluster}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            timeUnit={timeUnit}
+            onTimeUnitChange={setTimeUnit}
+            systemResponseMs={2500}
+            operatorName="Operator"
           />
         }
         sidebar={

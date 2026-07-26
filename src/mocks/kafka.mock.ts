@@ -91,11 +91,11 @@ export const kafkaClusterSummary = [
 // 3-4. Broker topology (KRaft mode, 5 brokers)
 export const kafkaBrokerTopology: { nodes: TopologyNode[]; edges: TopologyEdge[] } = {
   nodes: [
-    { id: "b1", label: "broker-1", status: "normal", isController: true, badges: [{ label: "CPU", value: "42%" }] },
-    { id: "b2", label: "broker-2", status: "normal", badges: [{ label: "CPU", value: "38%" }] },
-    { id: "b3", label: "broker-3", status: "warning", badges: [{ label: "CPU", value: "78%" }] },
-    { id: "b4", label: "broker-4", status: "normal", badges: [{ label: "CPU", value: "45%" }] },
-    { id: "b5", label: "broker-5", status: "critical", badges: [{ label: "CPU", value: "91%" }] },
+    { id: "b1", label: "broker-1", status: "normal", isController: true, badges: [{ label: "CPU", value: "42%" }, { label: "MEM", value: "58%" }, { label: "DISK", value: "61%" }] },
+    { id: "b2", label: "broker-2", status: "normal", badges: [{ label: "CPU", value: "38%" }, { label: "MEM", value: "52%" }, { label: "DISK", value: "58%" }] },
+    { id: "b3", label: "broker-3", status: "warning", badges: [{ label: "CPU", value: "78%" }, { label: "MEM", value: "81%" }, { label: "DISK", value: "72%" }] },
+    { id: "b4", label: "broker-4", status: "normal", badges: [{ label: "CPU", value: "45%" }, { label: "MEM", value: "55%" }, { label: "DISK", value: "60%" }] },
+    { id: "b5", label: "broker-5", status: "critical", badges: [{ label: "CPU", value: "91%" }, { label: "MEM", value: "88%" }, { label: "DISK", value: "84%" }] },
   ],
   edges: [
     { source: "b1", target: "b2" },

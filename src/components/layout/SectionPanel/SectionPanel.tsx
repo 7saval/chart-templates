@@ -7,11 +7,14 @@ export function SectionPanel({
   legend,
   children,
   className,
+  compact = false,
 }: SectionPanelProps) {
   return (
-    <Card className={cn("bg-card border-border", className)}>
+    <Card size={compact ? "sm" : "default"} className={cn("bg-card border-border", className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <h3 className="text-sm font-medium text-foreground">{title}</h3>
+        <h3 className={cn("font-medium text-foreground", compact ? "text-xs" : "text-sm")}>
+          {title}
+        </h3>
         {legend && (
           <div className="flex gap-3">
             {legend.map((item) => (

@@ -146,3 +146,56 @@ export const Loading: Story = {
   },
 };
 export const Empty: Story = { args: { nodes: [], edges: [], height: 360 } };
+
+export const Vertical: Story = {
+  args: {
+    ...Default.args,
+    direction: "vertical",
+  },
+};
+
+export const Horizontal: Story = {
+  args: {
+    nodes: [
+      {
+        id: "producer-1",
+        type: "pipelineNode",
+        position: { x: 0, y: 0 },
+        data: {
+          name: "Producer",
+          metrics: [{ label: "Throughput", value: "1.2k/s" }],
+          status: "normal",
+          sparklineData: [980, 1050, 1010, 1120, 1180, 1150, 1200],
+        },
+      },
+      {
+        id: "broker-1",
+        type: "pipelineNode",
+        position: { x: 220, y: 0 },
+        data: {
+          name: "Kafka Broker",
+          metrics: [{ label: "Lag", value: "210k" }],
+          status: "normal",
+          sparklineData: [150, 180, 165, 200, 190, 205, 210],
+        },
+      },
+      {
+        id: "consumer-1",
+        type: "pipelineNode",
+        position: { x: 440, y: 0 },
+        data: {
+          name: "Consumer",
+          metrics: [{ label: "Processed", value: "980/s" }],
+          status: "normal",
+          sparklineData: [820, 860, 900, 890, 940, 960, 980],
+        },
+      },
+    ],
+    edges: [
+      { id: "e1", source: "producer-1", target: "broker-1" },
+      { id: "e2", source: "broker-1", target: "consumer-1" },
+    ],
+    direction: "horizontal",
+    height: 280,
+  },
+};

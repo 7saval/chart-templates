@@ -145,7 +145,11 @@ export const ppsMinioTopology: { nodes: TopologyNode[]; edges: TopologyEdge[] } 
     id: `minio-${i + 1}`,
     label: `minio-${i + 1}`,
     status: i === 6 ? "warning" : ("normal" as const),
-    badges: [{ label: "bucket", value: `${60 + i * 3}%` }],
+    badges: [
+      { label: "CPU", value: `${28 + i * 5}%` },
+      { label: "MEM", value: `${40 + i * 4}%` },
+      { label: "DISK", value: `${60 + i * 3}%` },
+    ],
   })),
   edges: Array.from({ length: 8 }, (_, i) => ({
     source: `minio-${i + 1}`,

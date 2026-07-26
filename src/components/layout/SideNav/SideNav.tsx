@@ -17,8 +17,9 @@ export function SideNav({ items, activeId, onSelect }: SideNavProps) {
               <button
                 onClick={() => onSelect(item.id)}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-status-inactive/20",
-                  activeId === item.id && "bg-status-info/20 text-foreground",
+                  "flex w-full flex-col items-center gap-1 rounded-md px-1 py-3 text-center text-[11px] leading-tight text-muted-foreground hover:bg-status-inactive/20",
+                  activeId === item.id &&
+                    "bg-status-info/20 text-foreground shadow-glow-info",
                 )}
               >
                 {item.icon}
