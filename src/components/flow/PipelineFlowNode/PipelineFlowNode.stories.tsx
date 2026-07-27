@@ -73,3 +73,12 @@ export const Loading: Story = {
     isLoading: true,
   },
 };
+
+export const Highlight: Story = {
+  args: {
+    name: 'Vector DB (Milvus)',
+    status: 'critical',
+    highlight: { label: 'stale', value: '7,420s', caption: 'vec-regulation' },
+    sparklineData: [12, 30, 18, 42, 25, 50, 33, 60, 28, 45, 20, 55],
+  },
+};

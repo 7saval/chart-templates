@@ -24,7 +24,9 @@ function FlowNodeRenderer({
         position={direction === "horizontal" ? Position.Left : Position.Top}
         className="border-0! bg-transparent!"
       />
-      <PipelineFlowNode {...data} />
+      <div className="w-44">
+        <PipelineFlowNode {...data} />
+      </div>
       <Handle
         type="source"
         position={direction === "horizontal" ? Position.Right : Position.Bottom}

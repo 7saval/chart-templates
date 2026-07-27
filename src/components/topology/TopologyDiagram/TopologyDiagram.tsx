@@ -31,7 +31,8 @@ export function TopologyDiagram({
           .distance(120),
       )
       .force("charge", d3.forceManyBody().strength(-300))
-      .force("center", d3.forceCenter(width / 2, height / 2));
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collide", d3.forceCollide(52));
 
     const link = svg
       .append("g")

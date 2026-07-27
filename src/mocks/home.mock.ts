@@ -7,6 +7,7 @@ import type {
   PipelineFlowNodeType,
   PipelineFlowEdgeType,
 } from "@/components/flow/PipelineFlowDiagram/PipelineFlowDiagram.types";
+import type { PipelineFlowNodeProps } from "@/components/flow/PipelineFlowNode/PipelineFlowNode.types";
 import type { StatusLevel } from "@/tokens/colors";
 
 export const homeKpis: KpiCardData[] = [
@@ -179,8 +180,9 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
     position: { x: 1280, y: 380 },
     data: {
       name: "Vector DB (Milvus)",
-      status: "warning",
-      metrics: [{ label: "stale", value: "38s" }, { label: "vec-reg", value: "OK" }],
+      status: "critical",
+      highlight: { label: "stale", value: "7,420s", caption: "vec-regulation" },
+      sparklineData: [12, 30, 18, 42, 25, 50, 33, 60, 28, 45, 20, 55],
     },
   },
   {
@@ -246,10 +248,19 @@ export const homeStorageKpis: KpiCardData[] = [
 ];
 
 // 2-8. AI/Vector Summary
-export const homeVectorKpis: KpiCardData[] = [
-  { label: "Milvus Stale State", value: 38, unit: "s", status: "warning" },
-  { label: "AI Agent (RAG) qps", value: 9, deltaPct: 1.2, status: "normal" },
-  { label: "RAG Success Rate", value: 98.2, unit: "%", status: "normal" },
+export const homeVectorKpis: PipelineFlowNodeProps[] = [
+  {
+    name: "Vector DB (Milvus)",
+    status: "critical",
+    highlight: { label: "stale", value: "7,420s", caption: "vec-regulation" },
+    sparklineData: [12, 30, 18, 42, 25, 50, 33, 60, 28, 45, 20, 55],
+  },
+  {
+    name: "AI Agent (RAG)",
+    status: "normal",
+    highlight: { value: "1.2K qps", caption: "성공률 98.7%" },
+    sparklineData: [8, 9, 10, 9, 11, 12, 10, 13, 12, 14, 13, 15],
+  },
 ];
 
 export const homeTopQueries: RankedListItem[] = [

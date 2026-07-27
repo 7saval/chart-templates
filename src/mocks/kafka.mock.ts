@@ -79,6 +79,13 @@ export const kafkaTopicRows: TopicRow[] = [
   { id: "4", topic: "iceberg.sink.c2", partitions: 12, rf: 3, isr: "9/12", throughput: "2 MB/s", status: "critical" },
 ];
 
+// 3-4. Topic preview list — row-aligned with kafkaProducers via <RowConnector>
+export const kafkaTopicsRanked: RankedListItem[] = kafkaTopicRows.map((t) => ({
+  label: t.topic,
+  value: t.throughput,
+  status: t.status,
+}));
+
 // 3-4. Cluster summary mini stats
 export const kafkaClusterSummary = [
   { label: "Total Topics", value: 128 },

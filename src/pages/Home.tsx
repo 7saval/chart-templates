@@ -4,6 +4,7 @@ import { KpiCard } from "@/components/kpi/KpiCard";
 import { ProgressKpiCard } from "@/components/kpi/ProgressKpiCard";
 import { TrendLineChart } from "@/components/charts/TrendLineChart";
 import { PipelineFlowDiagram } from "@/components/flow/PipelineFlowDiagram/PipelineFlowDiagram";
+import { PipelineFlowNode } from "@/components/flow/PipelineFlowNode";
 import { StatusDataTable } from "@/components/tables/StatusDataTable";
 import { AlertEventTable } from "@/components/tables/AlertEventTable";
 import { RankedList } from "@/components/misc/RankedList";
@@ -68,9 +69,9 @@ export default function Home() {
 
       {/* 2-8: AI/Vector 요약 */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="grid grid-cols-3 gap-4">
-          {homeVectorKpis.map((kpi) => (
-            <KpiCard key={kpi.label} data={kpi} />
+        <div className="grid grid-cols-2 gap-4">
+          {homeVectorKpis.map((node) => (
+            <PipelineFlowNode key={node.name} {...node} />
           ))}
         </div>
         <SectionPanel compact title="Recent Top-5 Query Ranking">

@@ -4,6 +4,7 @@ import { KpiCard } from "@/components/kpi/KpiCard";
 import { KpiCardCompound } from "@/components/kpi/KpiCardCompound";
 import { RankedList } from "@/components/misc/RankedList";
 import { MiniStatCell } from "@/components/misc/MiniStatCell";
+import { RowConnector } from "@/components/misc/RowConnector";
 import { StatusDataTable } from "@/components/tables/StatusDataTable";
 import { TopologyDiagram } from "@/components/topology/TopologyDiagram/TopologyDiagram";
 import { BarChart } from "@/components/charts/BarChart";
@@ -20,6 +21,7 @@ import {
   kafkaTopicRows,
   kafkaClusterSummary,
   kafkaBrokerTopology,
+  kafkaTopicsRanked,
   kafkaConsumerGroupsRanked,
   kafkaSinksRanked,
   kafkaBrokerColumns,
@@ -59,16 +61,13 @@ export default function Kafka() {
       </div>
 
       {/* 3-4: 실시간 클러스터 상태 (KRaft mode) */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-x-2">
         <SectionPanel compact title="Producers">
           <RankedList items={kafkaProducers} />
         </SectionPanel>
-        <SectionPanel compact title="Cluster Summary">
-          <div className="grid grid-cols-2 gap-4">
-            {kafkaClusterSummary.map((s) => (
-              <MiniStatCell key={s.label} {...s} />
-            ))}
-          </div>
+        <RowConnector count={kafkaProducers.length} />
+        <SectionPanel compact title="Topic">
+          <RankedList items={kafkaTopicsRanked} />
         </SectionPanel>
       </div>
 
@@ -77,13 +76,23 @@ export default function Kafka() {
       </SectionPanel>
 
       <SectionPanel compact title="Broker Cluster Topology">
-        <TopologyDiagram nodes={kafkaBrokerTopology.nodes} edges={kafkaBrokerTopology.edges} />
+        <div className="mb-4 flex flex-wrap gap-6">
+          {kafkaClusterSummary.map((s) => (
+            <MiniStatCell key={s.label} {...s} />
+          ))}
+        </div>
+        <TopologyDiagram
+          nodes={kafkaBrokerTopology.nodes}
+          edges={kafkaBrokerTopology.edges}
+          height={380}
+        />
       </SectionPanel>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-x-2">
         <SectionPanel compact title="Consumer Groups (by Lag)">
           <RankedList items={kafkaConsumerGroupsRanked} />
         </SectionPanel>
+        <RowConnector count={kafkaConsumerGroupsRanked.length} />
         <SectionPanel compact title="Sinks / Downstream">
           <RankedList items={kafkaSinksRanked} />
         </SectionPanel>
