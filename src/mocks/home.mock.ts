@@ -229,6 +229,7 @@ export const homeTrend = {
     {
       name: "Events (eps)",
       color: "#f97316",
+      yAxisGroup: "secondary" as const,
       data: [1_200, 1_260, 1_180, 1_340, 1_290].map((v, i) => ({ label: String(i), value: v })),
     },
   ],

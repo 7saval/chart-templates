@@ -8,17 +8,25 @@ export function TrendLineChart({ series, xLabels, height = 240, isLoading, error
   if (error) return <div className="flex items-center justify-center text-sm text-status-critical" style={{ height }}>{error}</div>;
   if (series.length === 0) return <div className="flex items-center justify-center text-sm text-muted-foreground" style={{ height }}>No data</div>;
 
+  const hasSecondaryAxis = series.some((s) => s.yAxisGroup === 'secondary');
+
   const option = {
     ...DL_OPS_DARK_THEME,
     legend: { top: 0, textStyle: { color: '#94a3b8' } },
-    grid: { left: 40, right: 20, top: 32, bottom: 24 },
+    grid: { left: 40, right: hasSecondaryAxis ? 40 : 20, top: 32, bottom: 24 },
     tooltip: { ...DL_OPS_DARK_THEME.tooltip, trigger: 'axis' },
     xAxis: { ...DL_OPS_DARK_THEME.xAxis, type: 'category', data: xLabels },
-    yAxis: { ...DL_OPS_DARK_THEME.yAxis, type: 'value' },
+    yAxis: hasSecondaryAxis
+      ? [
+          { ...DL_OPS_DARK_THEME.yAxis, type: 'value' },
+          { ...DL_OPS_DARK_THEME.yAxis, type: 'value', splitLine: { show: false } },
+        ]
+      : { ...DL_OPS_DARK_THEME.yAxis, type: 'value' },
     dataZoom: [{ type: 'inside' }, { type: 'slider', height: 16 }],
     series: series.map((s) => ({
       name: s.name,
       type: 'line',
+      yAxisIndex: s.yAxisGroup === 'secondary' ? 1 : 0,
       data: s.data.map((d) => d.value),
       smooth: true,
       lineStyle: { color: s.color, type: s.dashed ? 'dashed' : 'solid' },
