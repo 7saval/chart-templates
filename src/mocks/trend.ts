@@ -47,3 +47,11 @@ export function toPoints(values: number[], stepMinutes = 5, anchor?: number): Ch
     value,
   }));
 }
+
+/** Shifts an already-timestamped series so its last point lands exactly on `anchor`, preserving shape/values. */
+export function reanchor(points: ChartDataPoint[], anchor: number): ChartDataPoint[] {
+  if (points.length === 0) return points;
+  const lastTimestamp = Number(points[points.length - 1].timestamp);
+  const offset = anchor - lastTimestamp;
+  return points.map((p) => ({ ...p, timestamp: Number(p.timestamp) + offset }));
+}

@@ -42,7 +42,7 @@ export function KpiCard({ data, isLoading, error, range }: KpiCardProps) {
       {breakdown && <Bell className="absolute right-4 top-4 size-4 text-status-warning" />}
       <CardContent className="flex items-center justify-between gap-4 pt-6">
         <div className="min-w-0">
-          <div className="text-xs leading-tight text-muted-foreground">{label}</div>
+          <div className="min-h-8 text-xs leading-tight text-muted-foreground">{label}</div>
           <div className="mt-1 flex items-baseline gap-1">
             <span className="text-2xl font-semibold text-foreground">{displayValue}</span>
             {unit && <span className="text-xs text-muted-foreground">{unit}</span>}

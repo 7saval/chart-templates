@@ -106,25 +106,25 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "src-xrois",
     type: "pipelineNode",
-    position: { x: 0, y: 130 },
+    position: { x: 0, y: 160 },
     data: { name: "XROIS", status: "normal", metrics: [{ label: "rec/s", value: 95 }] },
   },
   {
     id: "src-iris",
     type: "pipelineNode",
-    position: { x: 0, y: 260 },
+    position: { x: 0, y: 320 },
     data: { name: "IRIS", status: "normal", metrics: [{ label: "rec/s", value: 60 }] },
   },
   {
     id: "src-kotris",
     type: "pipelineNode",
-    position: { x: 0, y: 390 },
+    position: { x: 0, y: 480 },
     data: { name: "KOTRIS", status: "normal", metrics: [{ label: "rec/s", value: 40 }] },
   },
   {
     id: "src-voc",
     type: "pipelineNode",
-    position: { x: 0, y: 520 },
+    position: { x: 0, y: 640 },
     data: {
       name: "문서-VOC",
       status: "normal",
@@ -134,18 +134,20 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "adapter-cdc",
     type: "pipelineNode",
-    position: { x: 220, y: 170 },
+    position: { x: 280, y: 200 },
     data: {
       name: "Adapter-CDC",
       status: "normal",
-      metrics: [{ label: "nodes", value: 4 }, { label: "rec/s", value: 315 }],
-      sparklineData: toPoints([280, 300, 290, 310, 315]),
+      subtitle: "실시간 변경 캡쳐",
+      stats: ["9개 노드", "4.2K rec/s"],
+      chartVariant: "bar",
+      sparklineData: toPoints([3.6, 3.9, 3.7, 4.0, 3.8, 4.1, 3.9, 4.3, 4.0, 4.2, 4.1, 4.2]),
     },
   },
   {
     id: "adapter-dlhwp",
     type: "pipelineNode",
-    position: { x: 220, y: 430 },
+    position: { x: 280, y: 520 },
     data: {
       name: "Adapter-DLHWP",
       status: "normal",
@@ -155,31 +157,31 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "kafka-realtime",
     type: "pipelineNode",
-    position: { x: 440, y: 170 },
+    position: { x: 560, y: 200 },
     data: { name: "Kafka RealTime Topics", status: "normal", metrics: [{ label: "msg/s", value: 2_400 }] },
   },
   {
     id: "kafka-batch",
     type: "pipelineNode",
-    position: { x: 440, y: 430 },
+    position: { x: 560, y: 520 },
     data: { name: "Kafka Batch Topics", status: "normal", metrics: [{ label: "msg/s", value: 180 }] },
   },
   {
     id: "iceberg-c1",
     type: "pipelineNode",
-    position: { x: 660, y: 170 },
+    position: { x: 840, y: 200 },
     data: { name: "Iceberg Sink (C1)", status: "normal", metrics: [{ label: "write/h", value: 1_240 }] },
   },
   {
     id: "iceberg-c2",
     type: "pipelineNode",
-    position: { x: 660, y: 430 },
+    position: { x: 840, y: 520 },
     data: { name: "PPS Agent DLHWP (C2)", status: "warning", metrics: [{ label: "Lag", value: "210,000" }] },
   },
   {
     id: "minio",
     type: "pipelineNode",
-    position: { x: 880, y: 300 },
+    position: { x: 1120, y: 360 },
     data: {
       name: "MinIO/NAS",
       status: "normal",
@@ -189,7 +191,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "spark",
     type: "pipelineNode",
-    position: { x: 1080, y: 300 },
+    position: { x: 1380, y: 360 },
     data: {
       name: "SPARK",
       status: "normal",
@@ -199,13 +201,13 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "trino",
     type: "pipelineNode",
-    position: { x: 1280, y: 220 },
+    position: { x: 1640, y: 260 },
     data: { name: "TRINO", status: "normal", metrics: [{ label: "qps", value: 42 }, { label: "state", value: "running" }] },
   },
   {
     id: "milvus",
     type: "pipelineNode",
-    position: { x: 1280, y: 380 },
+    position: { x: 1640, y: 480 },
     data: {
       name: "Vector DB (Milvus)",
       status: "critical",
@@ -216,7 +218,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "ai-agent",
     type: "pipelineNode",
-    position: { x: 1480, y: 300 },
+    position: { x: 1900, y: 360 },
     data: { name: "AI Agent/RAG Search", status: "normal", metrics: [{ label: "qps", value: 9 }] },
   },
 ];

@@ -10,7 +10,8 @@ import { StatusDataTable } from "@/components/tables/StatusDataTable";
 import { AlertEventTable } from "@/components/tables/AlertEventTable";
 import { RankedList } from "@/components/misc/RankedList";
 import { resolveTimeRange } from "@/lib/resolveTimeRange";
-import { generateTrendSeries } from "@/mocks/trend";
+import { generateTrendSeries, reanchor } from "@/mocks/trend";
+import { STATUS_COLORS } from "@/tokens/colors";
 import type { TopHeaderTimeUnit } from "@/components/layout/TopHeader/TopHeader.types";
 import {
   homeKpis,
@@ -59,6 +60,32 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
     [lastRefresh],
   );
 
+  const flowNodesWithLiveTrend = useMemo(
+    () =>
+      homeFlowNodes.map((node) =>
+        node.data.sparklineData
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                sparklineData: reanchor(node.data.sparklineData, lastRefresh.getTime()),
+              },
+            }
+          : node,
+      ),
+    [lastRefresh],
+  );
+
+  const vectorKpisWithLiveTrend = useMemo(
+    () =>
+      homeVectorKpis.map((node) =>
+        node.sparklineData
+          ? { ...node, sparklineData: reanchor(node.sparklineData, lastRefresh.getTime()) }
+          : node,
+      ),
+    [lastRefresh],
+  );
+
   return (
     <div className="space-y-4">
       {/* 2-1: 파이프라인 전체 개요 */}
@@ -74,12 +101,23 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
       </div>
 
       {/* 2-5: 실시간 데이터 파이프라인 흐름도 */}
-      <SectionPanel compact title="Real-time Data Pipeline Flow">
+      <SectionPanel
+        compact
+        title="Real-time Data Pipeline Flow"
+        legend={[
+          { label: "정상", color: STATUS_COLORS.normal, variant: "dot" },
+          { label: "경고", color: STATUS_COLORS.warning, variant: "dot" },
+          { label: "오류", color: STATUS_COLORS.critical, variant: "dot" },
+          { label: "지연(Lag)", color: STATUS_COLORS.critical, variant: "dashed" },
+          { label: "데이터 흐름", color: "#60a5fa", variant: "arrow" },
+        ]}
+      >
         <PipelineFlowDiagram
-          nodes={homeFlowNodes}
+          nodes={flowNodesWithLiveTrend}
           edges={homeFlowEdges}
           direction="horizontal"
-          height={420}
+          height={600}
+          range={range}
         />
       </SectionPanel>
 
@@ -103,8 +141,8 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
       {/* 2-8: AI/Vector 요약 */}
       <div className="grid grid-cols-2 gap-4">
         <div className="grid grid-cols-2 gap-4">
-          {homeVectorKpis.map((node) => (
-            <PipelineFlowNode key={node.name} {...node} />
+          {vectorKpisWithLiveTrend.map((node) => (
+            <PipelineFlowNode key={node.name} {...node} range={range} />
           ))}
         </div>
         <SectionPanel compact title="Recent Top-5 Query Ranking">
