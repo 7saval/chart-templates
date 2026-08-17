@@ -1,3 +1,4 @@
+import { Bell } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SparklineChart } from '@/components/charts/SparklineChart';
@@ -11,7 +12,7 @@ function getDeltaColor(status: StatusLevel | undefined, deltaPct: number | undef
   return deltaPct >= 0 ? STATUS_COLORS.normal : STATUS_COLORS.critical;
 }
 
-export function KpiCard({ data, isLoading, error }: KpiCardProps) {
+export function KpiCard({ data, isLoading, error, range }: KpiCardProps) {
   if (isLoading) {
     return (
       <Card className="bg-card border-border">
@@ -31,17 +32,19 @@ export function KpiCard({ data, isLoading, error }: KpiCardProps) {
     );
   }
 
-  const { label, value, unit, deltaPct, compareLabel, trend, status } = data;
+  const { label, value, unit, deltaPct, compareLabel, trend, status, breakdown } = data;
   const arrow = deltaPct === undefined ? null : deltaPct > 0 ? '▲' : deltaPct < 0 ? '▼' : '─';
   const deltaColor = getDeltaColor(status, deltaPct);
+  const displayValue = typeof value === 'number' ? value.toLocaleString('en-US') : value;
 
   return (
-    <Card className="bg-card border-border">
+    <Card className="relative bg-card border-border">
+      {breakdown && <Bell className="absolute right-4 top-4 size-4 text-status-warning" />}
       <CardContent className="flex items-center justify-between gap-4 pt-6">
         <div className="min-w-0">
-          <div className="truncate text-xs text-muted-foreground">{label}</div>
+          <div className="text-xs leading-tight text-muted-foreground">{label}</div>
           <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-2xl font-semibold text-foreground">{value}</span>
+            <span className="text-2xl font-semibold text-foreground">{displayValue}</span>
             {unit && <span className="text-xs text-muted-foreground">{unit}</span>}
           </div>
           {arrow && (
@@ -49,10 +52,19 @@ export function KpiCard({ data, isLoading, error }: KpiCardProps) {
               {arrow} {Math.abs(deltaPct!)}%{compareLabel && ` (${compareLabel})`}
             </div>
           )}
+          {breakdown && (
+            <div className="mt-1 flex gap-2 text-xs">
+              {breakdown.map((b) => (
+                <span key={b.label} style={{ color: b.color }}>
+                  {b.label} {b.count}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         {trend && (
           <div className="w-24 shrink-0">
-            <SparklineChart data={trend} height={40} status={status} />
+            <SparklineChart data={trend} height={40} status={status} range={range} />
           </div>
         )}
       </CardContent>

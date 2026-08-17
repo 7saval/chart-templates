@@ -52,7 +52,7 @@ export default function App() {
             onPipelineChange={() => {}}
             autoRefresh={autoRefresh}
             onAutoRefreshChange={setAutoRefresh}
-            lastRefresh={lastRefresh}
+            lastRefresh={lastRefresh.toLocaleTimeString()}
             pipeline="all"
             cluster={cluster}
             clusterOptions={clusterOptions}
@@ -74,7 +74,7 @@ export default function App() {
         }
       >
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home dateRange={dateRange} timeUnit={timeUnit} lastRefresh={lastRefresh} />} />
           <Route path="/kafka" element={<Kafka />} />
           <Route path="/spark" element={<Spark />} />
           <Route path="/pps-minio" element={<PpsMinIO />} />

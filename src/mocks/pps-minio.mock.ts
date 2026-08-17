@@ -6,9 +6,10 @@ import type { TableColumn } from "@/components/tables/StatusDataTable/StatusData
 import type { RankedListItem } from "@/components/misc/RankedList/RankedList.types";
 import type { TopologyNode, TopologyEdge } from "@/components/topology/TopologyDiagram/TopologyDiagram.types";
 import type { PipelineStage } from "@/components/layout/PipelineStageTimeline/PipelineStageTimeline.types";
-import type { SeriesConfig } from "@/tokens/base.types";
+import type { ChartDataPoint, SeriesConfig } from "@/tokens/base.types";
 import type { DonutSlice } from "@/components/charts/DonutRingChart/DonutRingChart.types";
 import type { StatusLevel } from "@/tokens/colors";
+import { toPoints } from "./trend";
 
 function lagStatus(lag: number): StatusLevel {
   if (lag < 50_000) return "normal";
@@ -108,7 +109,7 @@ interface HpaRow extends Record<string, unknown> {
   memTarget: string;
   scaleEvents: number;
   status: StatusLevel;
-  trend: number[];
+  trend: ChartDataPoint[];
 }
 
 export const ppsMinioHpaColumns: TableColumn<HpaRow>[] = [
@@ -122,9 +123,9 @@ export const ppsMinioHpaColumns: TableColumn<HpaRow>[] = [
 ];
 
 export const ppsMinioHpaRows: HpaRow[] = [
-  { id: "1", deployment: "pps-agent-cdc-kovis", minMax: "2 / 10", current: 8, cpuTarget: "70% / 68%", memTarget: "75% / 72%", scaleEvents: 3, status: "normal", trend: [4, 5, 6, 7, 8] },
-  { id: "2", deployment: "pps-agent-cdc-xrois", minMax: "2 / 8", current: 4, cpuTarget: "70% / 52%", memTarget: "75% / 58%", scaleEvents: 1, status: "normal", trend: [3, 3, 4, 4, 4] },
-  { id: "3", deployment: "pps-agent-dlhwp", minMax: "1 / 4", current: 2, cpuTarget: "70% / 18%", memTarget: "75% / 24%", scaleEvents: 6, status: "warning", trend: [4, 2, 3, 1, 2] },
+  { id: "1", deployment: "pps-agent-cdc-kovis", minMax: "2 / 10", current: 8, cpuTarget: "70% / 68%", memTarget: "75% / 72%", scaleEvents: 3, status: "normal", trend: toPoints([4, 5, 6, 7, 8]) },
+  { id: "2", deployment: "pps-agent-cdc-xrois", minMax: "2 / 8", current: 4, cpuTarget: "70% / 52%", memTarget: "75% / 58%", scaleEvents: 1, status: "normal", trend: toPoints([3, 3, 4, 4, 4]) },
+  { id: "3", deployment: "pps-agent-dlhwp", minMax: "1 / 4", current: 2, cpuTarget: "70% / 18%", memTarget: "75% / 24%", scaleEvents: 6, status: "warning", trend: toPoints([4, 2, 3, 1, 2]) },
 ];
 
 // 5-6. MinIO Data Lakehouse

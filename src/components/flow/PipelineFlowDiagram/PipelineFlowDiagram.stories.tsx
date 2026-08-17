@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { PipelineFlowDiagram } from "./PipelineFlowDiagram";
+import { toPoints } from "@/mocks/trend";
 
 const meta: Meta<typeof PipelineFlowDiagram> = {
   title: "🔗 Flow/PipelineFlowDiagram",
@@ -19,7 +20,7 @@ export const Default: Story = {
           name: "Producer",
           metrics: [{ label: "Throughput", value: "1.2k/s" }],
           status: "normal",
-          sparklineData: [980, 1050, 1010, 1120, 1180, 1150, 1200],
+          sparklineData: toPoints([980, 1050, 1010, 1120, 1180, 1150, 1200]),
         },
       },
       {
@@ -30,7 +31,7 @@ export const Default: Story = {
           name: "Kafka Broker",
           metrics: [{ label: "Lag", value: "210k" }],
           status: "normal",
-          sparklineData: [150, 180, 165, 200, 190, 205, 210],
+          sparklineData: toPoints([150, 180, 165, 200, 190, 205, 210]),
         },
       },
       {
@@ -41,7 +42,7 @@ export const Default: Story = {
           name: "Consumer",
           metrics: [{ label: "Processed", value: "980/s" }],
           status: "normal",
-          sparklineData: [820, 860, 900, 890, 940, 960, 980],
+          sparklineData: toPoints([820, 860, 900, 890, 940, 960, 980]),
         },
       },
     ],
@@ -63,7 +64,7 @@ export const WithWarning: Story = {
           name: "Producer",
           metrics: [{ label: "Throughput", value: "1.2k/s" }],
           status: "normal",
-          sparklineData: [980, 1050, 1010, 1120, 1180, 1150, 1200],
+          sparklineData: toPoints([980, 1050, 1010, 1120, 1180, 1150, 1200]),
         },
       },
       {
@@ -74,7 +75,7 @@ export const WithWarning: Story = {
           name: "Kafka Broker",
           metrics: [{ label: "Lag", value: "210k" }],
           status: "warning",
-          sparklineData: [90, 105, 130, 160, 190, 210],
+          sparklineData: toPoints([90, 105, 130, 160, 190, 210]),
         },
       },
       {
@@ -85,7 +86,7 @@ export const WithWarning: Story = {
           name: "Consumer",
           metrics: [{ label: "Processed", value: "980/s" }],
           status: "normal",
-          sparklineData: [820, 860, 900, 890, 940, 960, 980],
+          sparklineData: toPoints([820, 860, 900, 890, 940, 960, 980]),
         },
       },
     ],
@@ -165,7 +166,7 @@ export const Horizontal: Story = {
           name: "Producer",
           metrics: [{ label: "Throughput", value: "1.2k/s" }],
           status: "normal",
-          sparklineData: [980, 1050, 1010, 1120, 1180, 1150, 1200],
+          sparklineData: toPoints([980, 1050, 1010, 1120, 1180, 1150, 1200]),
         },
       },
       {
@@ -176,7 +177,7 @@ export const Horizontal: Story = {
           name: "Kafka Broker",
           metrics: [{ label: "Lag", value: "210k" }],
           status: "normal",
-          sparklineData: [150, 180, 165, 200, 190, 205, 210],
+          sparklineData: toPoints([150, 180, 165, 200, 190, 205, 210]),
         },
       },
       {
@@ -187,7 +188,7 @@ export const Horizontal: Story = {
           name: "Consumer",
           metrics: [{ label: "Processed", value: "980/s" }],
           status: "normal",
-          sparklineData: [820, 860, 900, 890, 940, 960, 980],
+          sparklineData: toPoints([820, 860, 900, 890, 940, 960, 980]),
         },
       },
     ],

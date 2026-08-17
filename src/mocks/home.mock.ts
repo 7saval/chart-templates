@@ -9,33 +9,61 @@ import type {
 } from "@/components/flow/PipelineFlowDiagram/PipelineFlowDiagram.types";
 import type { PipelineFlowNodeProps } from "@/components/flow/PipelineFlowNode/PipelineFlowNode.types";
 import type { StatusLevel } from "@/tokens/colors";
+import { generateTrendSeries, toPoints } from "./trend";
 
 export const homeKpis: KpiCardData[] = [
   {
-    label: "End-to-End Latency",
-    value: 4.2,
-    unit: "s",
-    deltaPct: -3.1,
+    label: "Total Traffic (In/Out)",
+    value: 15.42,
+    unit: "GB/s",
+    deltaPct: 12.6,
     compareLabel: "vs 14:00",
-    trend: [5, 4.8, 4.5, 4.6, 4.3, 4.2],
+    trend: generateTrendSeries(15.42, { volatility: 0.05 }),
     status: "normal",
+  },
+  {
+    label: "Total Events / sec",
+    value: 125_842,
+    unit: "eps",
+    deltaPct: 8.2,
+    compareLabel: "vs 14:00",
+    trend: generateTrendSeries(125_842, { volatility: 0.05 }),
+    status: "normal",
+  },
+  {
+    label: "Pipeline Latency (End-to-End)",
+    value: 2.35,
+    unit: "sec",
+    deltaPct: -18.4,
+    compareLabel: "vs 14:00",
+    trend: generateTrendSeries(2.35, { volatility: 0.05 }),
+    status: "info",
+  },
+  {
+    label: "Processing Throughput",
+    value: 98.7,
+    unit: "K rec/s",
+    deltaPct: 9.7,
+    compareLabel: "vs 14:00",
+    trend: generateTrendSeries(98.7, { volatility: 0.05 }),
+    status: "warning",
+  },
+  {
+    label: "Error Rate",
+    value: 0.021,
+    unit: "%",
+    deltaPct: -22.1,
+    compareLabel: "vs 14:00",
+    trend: generateTrendSeries(0.021, { volatility: 0.05 }),
+    status: "critical",
   },
   {
     label: "Active Alerts",
-    value: 14,
+    value: 3,
     breakdown: [
-      { label: "Critical", count: 3, color: "#ef4444" },
-      { label: "Warning", count: 11, color: "#f97316" },
+      { label: "Critical", count: 1, color: "#ef4444" },
+      { label: "Warning", count: 2, color: "#f97316" },
     ],
-  },
-  {
-    label: "Throughput",
-    value: 12_400,
-    unit: "msg/s",
-    deltaPct: 5.4,
-    compareLabel: "vs 14:00",
-    trend: [10, 11, 10.5, 12, 12.4],
-    status: "normal",
   },
 ];
 
@@ -111,7 +139,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
       name: "Adapter-CDC",
       status: "normal",
       metrics: [{ label: "nodes", value: 4 }, { label: "rec/s", value: 315 }],
-      sparklineData: [280, 300, 290, 310, 315],
+      sparklineData: toPoints([280, 300, 290, 310, 315]),
     },
   },
   {
@@ -182,7 +210,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
       name: "Vector DB (Milvus)",
       status: "critical",
       highlight: { label: "stale", value: "7,420s", caption: "vec-regulation" },
-      sparklineData: [12, 30, 18, 42, 25, 50, 33, 60, 28, 45, 20, 55],
+      sparklineData: toPoints([12, 30, 18, 42, 25, 50, 33, 60, 28, 45, 20, 55]),
     },
   },
   {
@@ -254,13 +282,13 @@ export const homeVectorKpis: PipelineFlowNodeProps[] = [
     name: "Vector DB (Milvus)",
     status: "critical",
     highlight: { label: "stale", value: "7,420s", caption: "vec-regulation" },
-    sparklineData: [12, 30, 18, 42, 25, 50, 33, 60, 28, 45, 20, 55],
+    sparklineData: toPoints([12, 30, 18, 42, 25, 50, 33, 60, 28, 45, 20, 55]),
   },
   {
     name: "AI Agent (RAG)",
     status: "normal",
     highlight: { value: "1.2K qps", caption: "성공률 98.7%" },
-    sparklineData: [8, 9, 10, 9, 11, 12, 10, 13, 12, 14, 13, 15],
+    sparklineData: toPoints([8, 9, 10, 9, 11, 12, 10, 13, 12, 14, 13, 15]),
   },
 ];
 

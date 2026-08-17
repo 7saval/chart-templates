@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { SectionPanel } from "@/components/layout/SectionPanel";
 import { PipelineStageTimeline } from "@/components/layout/PipelineStageTimeline";
 import { KpiCard } from "@/components/kpi/KpiCard";
@@ -8,6 +9,9 @@ import { PipelineFlowNode } from "@/components/flow/PipelineFlowNode";
 import { StatusDataTable } from "@/components/tables/StatusDataTable";
 import { AlertEventTable } from "@/components/tables/AlertEventTable";
 import { RankedList } from "@/components/misc/RankedList";
+import { resolveTimeRange } from "@/lib/resolveTimeRange";
+import { generateTrendSeries } from "@/mocks/trend";
+import type { TopHeaderTimeUnit } from "@/components/layout/TopHeader/TopHeader.types";
 import {
   homeKpis,
   homeAlerts,
@@ -25,7 +29,36 @@ import {
   homeAdapterRows,
 } from "@/mocks/home.mock";
 
-export default function Home() {
+interface HomeProps {
+  dateRange?: { from: Date; to: Date };
+  timeUnit?: TopHeaderTimeUnit;
+  lastRefresh: Date;
+}
+
+export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
+  const range = useMemo(
+    () => resolveTimeRange(dateRange, timeUnit, lastRefresh),
+    [dateRange, timeUnit, lastRefresh],
+  );
+
+  const kpisWithLiveTrend = useMemo(
+    () =>
+      homeKpis.map((kpi) =>
+        kpi.trend
+          ? {
+              ...kpi,
+              trend: generateTrendSeries(Number(kpi.value), {
+                anchor: lastRefresh.getTime(),
+                points: 1441,
+                stepMinutes: 1,
+                volatility: 0.05,
+              }),
+            }
+          : kpi,
+      ),
+    [lastRefresh],
+  );
+
   return (
     <div className="space-y-4">
       {/* 2-1: 파이프라인 전체 개요 */}
@@ -34,9 +67,9 @@ export default function Home() {
       </SectionPanel>
 
       {/* 2-2 ~ 2-4: KPI 카드 그리드 */}
-      <div className="grid grid-cols-3 gap-4">
-        {homeKpis.map((kpi) => (
-          <KpiCard key={kpi.label} data={kpi} />
+      <div className="grid grid-cols-6 gap-4">
+        {kpisWithLiveTrend.map((kpi) => (
+          <KpiCard key={kpi.label} data={kpi} range={range} />
         ))}
       </div>
 

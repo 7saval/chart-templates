@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { PipelineFlowNode } from './PipelineFlowNode';
+import { toPoints } from '@/mocks/trend';
 
 const meta: Meta<typeof PipelineFlowNode> = {
   title: '🔗 Flow/PipelineFlowNode',
@@ -8,7 +9,7 @@ const meta: Meta<typeof PipelineFlowNode> = {
 export default meta;
 type Story = StoryObj<typeof PipelineFlowNode>;
 
-const throughputTrend = [120, 132, 128, 145, 150, 148, 160];
+const throughputTrend = toPoints([120, 132, 128, 145, 150, 148, 160]);
 
 export const Default: Story = {
   args: {
@@ -30,7 +31,7 @@ export const Warning: Story = {
       { label: 'Throughput', value: '95/s' },
       { label: 'Lag', value: '210,000' },
     ],
-    sparklineData: [90, 105, 130, 160, 190, 210],
+    sparklineData: toPoints([90, 105, 130, 160, 190, 210]),
   },
 };
 
@@ -42,7 +43,7 @@ export const Critical: Story = {
       { label: 'Queue', value: '4,300' },
       { label: 'Errors', value: '58' },
     ],
-    sparklineData: [10, 25, 60, 120, 220, 430],
+    sparklineData: toPoints([10, 25, 60, 120, 220, 430]),
   },
 };
 
@@ -79,6 +80,6 @@ export const Highlight: Story = {
     name: 'Vector DB (Milvus)',
     status: 'critical',
     highlight: { label: 'stale', value: '7,420s', caption: 'vec-regulation' },
-    sparklineData: [12, 30, 18, 42, 25, 50, 33, 60, 28, 45, 20, 55],
+    sparklineData: toPoints([12, 30, 18, 42, 25, 50, 33, 60, 28, 45, 20, 55]),
   },
 };

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { KpiCard } from './KpiCard';
+import { generateTrendSeries } from '@/mocks/trend';
 
 const meta: Meta<typeof KpiCard> = {
   title: '📊 KPI Cards/KpiCard',
@@ -14,7 +15,7 @@ const baseData = {
   unit: 's',
   deltaPct: -3.1,
   compareLabel: 'vs 14:00',
-  trend: [5, 4.8, 4.5, 4.6, 4.3, 4.2],
+  trend: generateTrendSeries(4.2, { volatility: 0.05 }),
   status: 'normal' as const,
 };
 

@@ -44,7 +44,7 @@ export function TopologyDiagram({
 
     const node = svg
       .append("g")
-      .selectAll("g")
+      .selectAll<SVGGElement, SimNode>("g")
       .data(simNodes)
       .join("g")
       .call(
