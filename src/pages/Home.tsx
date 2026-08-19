@@ -60,22 +60,6 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
     [lastRefresh],
   );
 
-  const flowNodesWithLiveTrend = useMemo(
-    () =>
-      homeFlowNodes.map((node) =>
-        node.data.sparklineData
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                sparklineData: reanchor(node.data.sparklineData, lastRefresh.getTime()),
-              },
-            }
-          : node,
-      ),
-    [lastRefresh],
-  );
-
   const vectorKpisWithLiveTrend = useMemo(
     () =>
       homeVectorKpis.map((node) =>
@@ -113,11 +97,12 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
         ]}
       >
         <PipelineFlowDiagram
-          nodes={flowNodesWithLiveTrend}
+          nodes={homeFlowNodes}
           edges={homeFlowEdges}
           direction="horizontal"
           height={600}
           range={range}
+          anchor={lastRefresh.getTime()}
         />
       </SectionPanel>
 
