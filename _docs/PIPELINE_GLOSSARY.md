@@ -73,3 +73,108 @@ Trino(정형 데이터 조회)와 Milvus(벡터 검색)를 도구처럼 활용�
 
 정리하면: 어댑터는 "형식을 맞추는 번역", Kafka는 "속도 차이를 흡수하고 여러 소비자에게 나눠주는 완충 창고"이며,
 여러 단계를 거치는 이유는 한쪽이 느려지거나 죽어도 전체 파이프라인이 같이 무너지지 않게 하기 위함이다.
+
+## Pipeline Overview 타임라인 — `homeStages` (`Home.tsx` 최상단, `src/mocks/home.mock.ts:89~99`)
+
+위 8단계 흐름(`homeFlowNodes`)을 요약해서 원형 노드 8개로 보여주는 상단 타임라인. `_docs/images/PipelineStageTimeline1.png` 참고 이미지를 기준으로 구현했다.
+
+```
+Data Source(16) → PPS Adapter(9) → Kafka(24) → PPS Agent/DWP(12, 경고)
+   → Iceberg Sink(7) → MinIO/Iceberg(18) → Spark/Trino(17) → Milvus/AI Agent(7)
+```
+
+각 원이 무엇을 묶은 것인지:
+
+| 타임라인 단계 | 대응하는 `homeFlowNodes` |
+|---|---|
+| Data Source | KOVIS / XROIS / IRIS / KOTRIS / 문서-VOC |
+| PPS Adapter | Adapter-CDC / Adapter-DLHWP |
+| Kafka | Kafka RealTime Topics / Kafka Batch Topics |
+| PPS Agent/DWP | PPS Agent DLHWP (C2) — Kafka **배치 토픽**을 소비 |
+| Iceberg Sink | Iceberg Sink (C1) — Kafka **실시간 토픽**을 소비 |
+| MinIO/Iceberg | MinIO/NAS |
+| Spark/Trino | SPARK / TRINO |
+| Milvus/AI Agent | Vector DB(Milvus) / AI Agent/RAG Search |
+
+**PPS Agent/DWP와 Iceberg Sink가 나뉜 이유**: Kafka 이후 실시간 경로(Iceberg Sink)와 배치 경로(PPS Agent/DWP)가 갈라지기 때문. 서로 독립된 소비자라, 배치 쪽이 지연(Lag)으로 경고 상태여도 실시간 쪽은 영향받지 않는다 — 위 "장애 격리" 항목과 같은 이유.
+
+### 원 안의 숫자(count) — ⚠️ 의미 확인 필요
+
+`PipelineStageTimeline` 컴포넌트에서 `count`는 원 안에 표시되는 숫자이자, 스테이지 사이 연결선의 굵기/흐름 속도를 정하는 상대 스케일 값이다(`PipelineStageTimeline.types.ts`의 `volume`/`count` 참고). 즉 컴포넌트 자체는 "이 단계의 상대적 규모"를 나타내는 범용 지표로 설계돼 있고, 단위가 고정돼 있지 않다.
+
+지금 `homeStages`에 들어간 16 / 9 / 24 / 12 / 7 / 18 / 17 / 7 은 참고 이미지(`PipelineStageTimeline1.png`)에 적힌 숫자를 그대로 옮긴 값으로, **각 숫자가 정확히 무엇을 세는 건지(노드 수인지 처리량인지 등)는 아직 확인되지 않았다**. 일부만 다른 mock 값과 우연히 일치:
+
+- **PPS Adapter (9)** — Adapter-CDC의 `"9개 노드"`(`home.mock.ts` Adapter-CDC 카드)와 일치. 노드 수로 보임.
+- **Kafka (24)** — 원본 참고 이미지(`_docs/images/PipelineFlowDiagram.png`)의 RealTime Topics `"24 MB/s"`와 값이 같음. 이 경우엔 노드 수가 아니라 처리량(MB/s)으로 보임.
+- 나머지(Data Source 16, PPS Agent/DWP 12, Iceberg Sink 7, MinIO/Iceberg 18, Spark/Trino 17, Milvus/AI Agent 7)는 현재 다른 mock 데이터와 맞아떨어지는 근거가 없는 placeholder.
+
+→ 스테이지별로 단위가 섞여 있을 가능성이 있어(노드 수 vs 처리량), 실제 의미를 쓸 일이 생기면 원본 디자인/기획 의도를 확인하고 이 문서를 갱신할 것.
+
+### `(C1)` / `(C2)` — 컨슈머 인스턴스 번호
+
+`Iceberg Sink (C1)`, `PPS Agent DLHWP (C2)`의 `C1`/`C2`는 Kafka 토픽을 읽어가는 컨슈머(소비자) 인스턴스 번호. 이 파이프라인이 실시간/배치 두 갈래로 나뉘어 있어서, 그걸 각각 처리하는 소비자를 1번(C1, 실시간 토픽 소비)·2번(C2, 배치 토픽 소비)으로 구분해둔 식별자다. 특별한 약어라기보다 "1번 소비자 / 2번 소비자"에 가깝다.
+
+### Lag(지연) — Kafka 컨슈머가 밀린 메시지 수
+
+```
+Lag = (Kafka에 쌓인 최신 메시지 위치) − (컨슈머가 현재까지 읽은 위치)
+```
+
+생산자(Kafka에 데이터를 넣는 쪽)가 컨슈머(꺼내가는 쪽)보다 빨리 쌓으면 Lag가 늘어난다. 데이터가 유실된 건 아니고 Kafka에 안전하게 쌓여만 있는 상태 — 위 "속도 차이 흡수(버퍼링)" 항목이 실제로 드러나는 지표다.
+
+`src/tokens/colors.ts`의 `LAG_THRESHOLDS` 기준 임계치:
+
+| Lag 범위 | 상태 | 색상 |
+|---|---|---|
+| < 50,000 | normal | 초록 |
+| < 200,000 | caution | 주황 |
+| < 500,000 | warning | 적주황 |
+| ≥ 500,000 | critical | 빨강 |
+
+`PPS Agent DLHWP (C2)`의 Lag가 210,000이라 이 구간에 걸려 타임라인/플로우 다이어그램에서 주황(경고)으로 표시된다.
+
+## KPI 카드 — `homeKpis` (`Home.tsx` 2-2~2-4, `src/mocks/home.mock.ts:14~68`)
+
+### 필드 구조 (`KpiCard.types.ts`)
+
+| 필드 | 의미 |
+|---|---|
+| `label` | 카드 제목 |
+| `value` | 현재 값(숫자/문자열) |
+| `unit` | 값 옆에 붙는 단위 |
+| `deltaPct` | 비교 시점 대비 증감률(%). 화살표(▲/▼)·색상을 결정 |
+| `compareLabel` | 증감률의 비교 기준 시점 텍스트 (예: "vs 14:00") |
+| `trend` | 카드 우측 미니 스파크라인용 시계열 데이터 |
+| `status` | 지정 시 증감 화살표 색을 상태색으로 고정. 없으면 `deltaPct` 부호로 자동(양수=초록/음수=빨강) |
+| `breakdown` | 값을 하위 항목별로 쪼개 보여줄 때 사용(예: Critical/Warning 개수). 지정되면 우측 상단에 종 아이콘이 뜨고, 스파크라인 대신 항목별 카운트가 표시됨 |
+
+### 카드 6개가 각각 뭘 뜻하는지
+
+파이프라인 특정 단계가 아니라 소스→AI Agent까지 전 구간을 관통하는 요약 지표.
+
+1. **Total Traffic (In/Out)** — 파이프라인에 들어오고 나가는 전체 데이터량. 소스 유입 트래픽과 최종 산출 트래픽을 합친 처리 용량 지표.
+2. **Total Events / sec** — 초당 처리되는 이벤트(레코드) 개수. 모든 소스에서 발생한 이벤트를 합산한 처리 속도.
+3. **Pipeline Latency (End-to-End)** — 데이터가 소스에서 발생해 최종 단계까지 도달하는 데 걸리는 총 소요 시간. 낮을수록 실시간에 가깝다는 뜻.
+4. **Processing Throughput** — 파이프라인이 실제로 처리(소화)해내는 처리량. Total Events가 "들어오는 양"이면 이건 "처리해낸 양" — 둘의 차이가 벌어지면 Lag가 쌓인다는 신호.
+5. **Error Rate** — 처리 중 실패/오류가 발생한 비율. 변환 실패, 파싱 오류, 적재 실패 등을 포괄.
+6. **Active Alerts** — 현재 발생 중인 알림 개수. `breakdown`으로 Critical/Warning 개수를 나눠 보여주는 유일한 카드로, `AlertEventTable`과 연결되는 요약 게이트웨이 역할.
+
+축으로 정리하면: 1·2번은 "얼마나 들어오는가", 4번은 "얼마나 처리해내는가", 3번은 "얼마나 빨리 끝까지 가는가", 5·6번은 "그 과정에서 뭐가 잘못되고 있는가".
+
+### `unit`이 각각 뭘 뜻하는지
+
+| 카드 | unit | 뜻 |
+|---|---|---|
+| Total Traffic (In/Out) | `GB/s` | 초당 기가바이트 — 데이터의 **용량(크기)** 속도 |
+| Total Events / sec | `eps` (events per second) | 초당 이벤트(레코드) **건수** |
+| Pipeline Latency (End-to-End) | `sec` | 소스 발생~최종 단계 도달까지 걸린 **시간(초)**. 유일하게 낮을수록 좋은 지표 |
+| Processing Throughput | `K rec/s` (thousand records/sec) | 초당 처리해낸 레코드 수(천 단위). eps와 같은 성격(건수/초)이지만 "들어오는 양"이 아니라 "실제 처리해낸 양" |
+| Error Rate | `%` | 전체 처리 건수 대비 오류/실패 건수의 비율 |
+| Active Alerts | (없음) | 단위 없는 순수 개수. `breakdown`으로 Critical/Warning 건수만 별도 표시 |
+
+**단위 짝 정리:**
+- **속도(rate) 계열**: `GB/s`(용량), `eps`/`K rec/s`(건수), 플로우 다이어그램의 `MB/s`(Kafka 처리량) — 전부 "초당 얼마나"를 재지만 대상(바이트 vs 건수)이 다름
+- **시간 계열**: `sec`(Latency), 플로우 다이어그램의 `freshness`(예: `2m`, `9m`) — 지연·최신성을 나타내는 시간값
+- **비율 계열**: `%` — Error Rate 외에 MinIO 용량 사용률(`68%`)에도 동일하게 쓰임
+
+플로우 다이어그램/스토리지 카드 쪽에는 `rec/s`(소스별 초당 레코드), `msg/s`(Kafka 메시지), `qps`(Trino/AI Agent 초당 쿼리), `write/h`·`docs/hr`(시간당 처리 건수) 같은 단위도 나오는데, 전부 "초당/시간당 몇 건"이라는 같은 계열이고 대상(메시지 vs 쿼리 vs 문서)만 다르다.

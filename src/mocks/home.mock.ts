@@ -86,12 +86,17 @@ export const homeAlerts: AlertEvent[] = [
   },
 ];
 
+// homeFlowNodes(2-5) 흐름을 8단계로 요약: Data Source → PPS Adapter → Kafka → PPS Agent/DWP(배치 소비)
+// → Iceberg Sink(실시간 소비) → MinIO/Iceberg(저장) → Spark/Trino(가공·조회) → Milvus/AI Agent(벡터·에이전트)
 export const homeStages = [
-  { name: "CDC", count: 4, status: "normal" as const },
-  { name: "Kafka", count: 12, status: "normal" as const },
-  { name: "Iceberg", count: 2, status: "warning" as const },
-  { name: "Spark", count: 6, status: "normal" as const },
-  { name: "Milvus", count: 1, status: "normal" as const },
+  { name: "Data Source", count: 16, status: "normal" as const },
+  { name: "PPS Adapter", count: 9, status: "normal" as const },
+  { name: "Kafka", count: 24, status: "normal" as const },
+  { name: "PPS Agent/DWP", count: 12, status: "warning" as const },
+  { name: "Iceberg Sink", count: 7, status: "normal" as const },
+  { name: "MinIO/Iceberg", count: 18, status: "normal" as const },
+  { name: "Spark/Trino", count: 17, status: "normal" as const },
+  { name: "Milvus/AI Agent", count: 7, status: "normal" as const },
 ];
 
 // 2-5. Real-time Data Pipeline Flow Diagram — Data Source → Adapter → Kafka → Iceberg Sink → MinIO → Spark → Trino/Milvus → AI Agent
