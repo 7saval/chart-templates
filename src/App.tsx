@@ -33,7 +33,7 @@ export default function App() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const lastRefresh = useAutoRefresh(autoRefresh, 5000);
   const [clusterState, setCluster] = useState("kafka-prod");
-  const [timeUnit, setTimeUnit] = useState<TopHeaderTimeUnit>("15m");
+  const [timeUnit, setTimeUnit] = useState<TopHeaderTimeUnit>("1H");
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>();
   const clusterOptions = CLUSTER_OPTIONS_BY_ROUTE[location.pathname];
   const cluster = clusterOptions?.includes(clusterState)

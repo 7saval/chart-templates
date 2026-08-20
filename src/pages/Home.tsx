@@ -115,23 +115,27 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
         />
       </SectionPanel>
 
-      {/* 2-7: 스토리지 & 쿼리 사용량 */}
-      <div className="grid grid-cols-3 gap-4">
-        <ProgressKpiCard data={homeMinioCapacity} />
-        {homeStorageKpis.map((kpi) => (
-          <KpiCard key={kpi.label} data={kpi} />
-        ))}
-      </div>
+      {/* 2-7 & 2-8: 저장소 & 쿼리 사용량 / AI·Vector 요약 */}
+      <div className="flex gap-4">
+        <SectionPanel compact title="저장소 & 쿼리 사용량" className="flex-1">
+          <div className="grid grid-cols-3 gap-4">
+            <ProgressKpiCard data={homeMinioCapacity} range={range} />
+            {homeStorageKpis.map((kpi) => (
+              <KpiCard key={kpi.label} data={kpi} range={range} />
+            ))}
+          </div>
+        </SectionPanel>
 
-      {/* 2-8: AI/Vector 요약 */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid grid-cols-2 gap-4">
-          {vectorKpisWithLiveTrend.map((node) => (
-            <PipelineFlowNode key={node.name} {...node} range={range} />
-          ))}
-        </div>
-        <SectionPanel compact title="Recent Top-5 Query Ranking">
-          <RankedList items={homeTopQueries} />
+        <SectionPanel compact title="AI / Vector 요약" className="flex-1">
+          <div className="grid grid-cols-3 gap-4">
+            {vectorKpisWithLiveTrend.map((node) => (
+              <PipelineFlowNode key={node.name} {...node} range={range} />
+            ))}
+            <div>
+              <div className="mb-2 text-xs font-medium text-muted-foreground">최근 질의 Top 5</div>
+              <RankedList items={homeTopQueries} />
+            </div>
+          </div>
         </SectionPanel>
       </div>
 

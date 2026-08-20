@@ -166,9 +166,10 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
     type: "pipelineNode",
     position: { x: 560, y: 200 },
     data: {
-      name: "Kafka RealTime Topics",
+      name: "RealTime Topics",
       status: "normal",
-      metrics: [{ label: "msg/s", value: 2_400 }],
+      subtitle: "Topic 88 · Part 352",
+      stats: ["24 MB/s", "Lag 6.2K"],
       chartVariant: "bar",
       sparklineData: toPoints([2200, 2350, 2300, 2450, 2380, 2500, 2300, 2420, 2350, 2480, 2400, 2450]),
     },
@@ -322,11 +323,28 @@ export const homeMinioCapacity: ProgressKpiData = {
   value: "18.4 TB",
   total: 24,
   usedPct: 76.7,
+  chartVariant: "line",
+  sparklineData: toPoints([68, 70, 69, 72, 71, 74, 72, 75, 73, 76, 74, 76.7]),
 };
 
 export const homeStorageKpis: KpiCardData[] = [
-  { label: "Iceberg Tables", value: 142, deltaPct: 2.1, compareLabel: "vs yesterday" },
-  { label: "Trino Queries", value: 8_240, unit: "qps", deltaPct: 4.6, compareLabel: "vs yesterday" },
+  {
+    label: "Iceberg Tables",
+    value: 142,
+    deltaPct: 2.1,
+    compareLabel: "vs yesterday",
+    chartVariant: "bar",
+    trend: toPoints([128, 132, 130, 135, 133, 138, 134, 140, 136, 141, 138, 142]),
+  },
+  {
+    label: "Trino Queries",
+    value: 8_240,
+    unit: "qps",
+    deltaPct: 4.6,
+    compareLabel: "vs yesterday",
+    chartVariant: "bar",
+    trend: toPoints([7800, 8000, 7900, 8100, 8050, 8300, 8150, 8400, 8200, 8350, 8180, 8240]),
+  },
 ];
 
 // 2-8. AI/Vector Summary

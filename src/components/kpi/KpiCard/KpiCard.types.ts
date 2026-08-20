@@ -8,6 +8,8 @@ export interface KpiCardData {
   deltaPct?: number;
   compareLabel?: string;
   trend?: ChartDataPoint[];
+  /** 트렌드 미니 차트 종류. 기본값 "line" */
+  chartVariant?: 'line' | 'bar';
   status?: StatusLevel;
   breakdown?: { label: string; count: number; color: string }[];
 }
