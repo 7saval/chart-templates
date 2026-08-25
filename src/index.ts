@@ -1,5 +1,6 @@
 export * from "./components/layout/DashboardShell";
 export * from "./components/layout/TopHeader";
+export * from "./components/layout/TimeRangeToggle";
 export * from "./components/layout/SideNav";
 export * from "./components/layout/SectionPanel";
 export * from "./components/layout/PipelineStageTimeline";

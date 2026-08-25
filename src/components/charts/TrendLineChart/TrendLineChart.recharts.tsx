@@ -4,7 +4,7 @@ import type { TrendLineChartProps } from './TrendLineChart.types';
 export function TrendLineChartRecharts({ series, xLabels, height = 240, isLoading }: TrendLineChartProps) {
   if (isLoading) return <div style={{ height }} className="animate-pulse bg-muted/20 rounded" />;
 
-  const data = xLabels.map((label, i) => {
+  const data = (xLabels ?? []).map((label, i) => {
     const row: Record<string, string | number> = { label };
     series.forEach((s) => { row[s.name] = s.data[i]?.value ?? 0; });
     return row;

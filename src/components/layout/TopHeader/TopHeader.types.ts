@@ -1,4 +1,6 @@
-export type TopHeaderTimeUnit = "5m" | "15m" | "1H" | "6H" | "1D";
+import type { TimeRangeUnit } from "@/components/layout/TimeRangeToggle/TimeRangeToggle.types";
+
+export type TopHeaderTimeUnit = TimeRangeUnit;
 
 export interface TopHeaderProps {
   env: string;

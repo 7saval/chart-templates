@@ -296,23 +296,28 @@ export const homeFlowEdges: PipelineFlowEdgeType[] = [
 
 // 2-6. Traffic & Throughput Trend Charts
 export const homeTrend = {
-  xLabels: ["09:00", "09:05", "09:10", "09:15", "09:20"],
   series: [
     {
       name: "Traffic In (GB/s)",
       color: "#3b82f6",
-      data: [3.8, 4.1, 4.0, 4.3, 4.2].map((v, i) => ({ label: String(i), value: v })),
+      data: generateTrendSeries(14.8, { volatility: 0.05 }),
     },
     {
       name: "Traffic Out (GB/s)",
       color: "#22c55e",
-      data: [3.2, 3.4, 3.3, 3.6, 3.5].map((v, i) => ({ label: String(i), value: v })),
+      data: generateTrendSeries(12.7, { volatility: 0.05 }),
     },
     {
       name: "Events (eps)",
       color: "#f97316",
       yAxisGroup: "secondary" as const,
-      data: [1_200, 1_260, 1_180, 1_340, 1_290].map((v, i) => ({ label: String(i), value: v })),
+      data: generateTrendSeries(128_432, { volatility: 0.05 }),
+    },
+    {
+      name: "Throughput (rec/s)",
+      color: "#a855f7",
+      yAxisGroup: "secondary" as const,
+      data: generateTrendSeries(96_214, { volatility: 0.05 }),
     },
   ],
 };

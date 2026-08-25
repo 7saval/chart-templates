@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { SectionPanel } from "@/components/layout/SectionPanel";
 import { PipelineStageTimeline } from "@/components/layout/PipelineStageTimeline";
+import { TimeRangeToggle } from "@/components/layout/TimeRangeToggle";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { ProgressKpiCard } from "@/components/kpi/ProgressKpiCard";
 import { TrendLineChart } from "@/components/charts/TrendLineChart";
@@ -13,6 +14,7 @@ import { resolveTimeRange } from "@/lib/resolveTimeRange";
 import { generateTrendSeries, reanchor } from "@/mocks/trend";
 import { STATUS_COLORS } from "@/tokens/colors";
 import type { TopHeaderTimeUnit } from "@/components/layout/TopHeader/TopHeader.types";
+import type { TimeRangeUnit } from "@/components/layout/TimeRangeToggle";
 import {
   homeKpis,
   homeAlerts,
@@ -42,6 +44,21 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
     [dateRange, timeUnit, lastRefresh],
   );
 
+  // 2-6 트렌드 차트는 상단 헤더 기간과 별도로 자체 기간 선택을 가짐
+  const [trendTimeUnit, setTrendTimeUnit] = useState<TimeRangeUnit>("1H");
+  const trendRange = useMemo(
+    () => resolveTimeRange(undefined, trendTimeUnit, lastRefresh),
+    [trendTimeUnit, lastRefresh],
+  );
+  const trendSeriesWithLiveData = useMemo(
+    () =>
+      homeTrend.series.map((s) => ({
+        ...s,
+        data: reanchor(s.data, lastRefresh.getTime()),
+      })),
+    [lastRefresh],
+  );
+
   const kpisWithLiveTrend = useMemo(
     () =>
       homeKpis.map((kpi) =>
@@ -64,7 +81,13 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
     () =>
       homeVectorKpis.map((node) =>
         node.sparklineData
-          ? { ...node, sparklineData: reanchor(node.sparklineData, lastRefresh.getTime()) }
+          ? {
+              ...node,
+              sparklineData: reanchor(
+                node.sparklineData,
+                lastRefresh.getTime(),
+              ),
+            }
           : node,
       ),
     [lastRefresh],
@@ -92,7 +115,11 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
           { label: "정상", color: STATUS_COLORS.normal, variant: "dot" },
           { label: "경고", color: STATUS_COLORS.warning, variant: "dot" },
           { label: "오류", color: STATUS_COLORS.critical, variant: "dot" },
-          { label: "지연(Lag)", color: STATUS_COLORS.critical, variant: "dashed" },
+          {
+            label: "지연(Lag)",
+            color: STATUS_COLORS.critical,
+            variant: "dashed",
+          },
           { label: "데이터 흐름", color: "#60a5fa", variant: "arrow" },
         ]}
       >
@@ -107,10 +134,21 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
       </SectionPanel>
 
       {/* 2-6: 트래픽/처리량 트렌드 */}
-      <SectionPanel compact title="Traffic & Throughput Trend">
+      <SectionPanel
+        compact
+        title="트래픽 & 처리량 추이"
+        legend={homeTrend.series.map((s) => ({
+          label: s.name,
+          color: s.color,
+        }))}
+        actions={
+          <TimeRangeToggle value={trendTimeUnit} onChange={setTrendTimeUnit} />
+        }
+      >
         <TrendLineChart
-          series={homeTrend.series}
-          xLabels={homeTrend.xLabels}
+          series={trendSeriesWithLiveData}
+          range={trendRange}
+          showLegend={false}
           height={260}
         />
       </SectionPanel>
@@ -132,7 +170,9 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
               <PipelineFlowNode key={node.name} {...node} range={range} />
             ))}
             <div>
-              <div className="mb-2 text-xs font-medium text-muted-foreground">최근 질의 Top 5</div>
+              <div className="mb-2 text-xs font-medium text-muted-foreground">
+                최근 질의 Top 5
+              </div>
               <RankedList items={homeTopQueries} />
             </div>
           </div>
@@ -141,7 +181,10 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
 
       {/* 2-9: 컨테이너 리소스 사용량 */}
       <SectionPanel compact title="Container Resource Usage">
-        <StatusDataTable columns={homeContainerColumns} data={homeContainerRows} />
+        <StatusDataTable
+          columns={homeContainerColumns}
+          data={homeContainerRows}
+        />
       </SectionPanel>
 
       {/* 2-10: PPS Adapter/Agent 상태 */}

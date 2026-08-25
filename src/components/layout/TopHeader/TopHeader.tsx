@@ -16,10 +16,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import type { TopHeaderProps, TopHeaderTimeUnit } from "./TopHeader.types";
-
-const TIME_UNITS: TopHeaderTimeUnit[] = ["5m", "15m", "1H", "6H", "1D"];
+import { TimeRangeToggle } from "@/components/layout/TimeRangeToggle";
+import type { TopHeaderProps } from "./TopHeader.types";
 
 function formatDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -113,19 +111,7 @@ export function TopHeader({
           </Popover>
         )}
         {onTimeUnitChange && (
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={timeUnit}
-            onValueChange={(v) => v && onTimeUnitChange(v as TopHeaderTimeUnit)}
-          >
-            {TIME_UNITS.map((u) => (
-              <ToggleGroupItem key={u} value={u} className="text-xs">
-                {u}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+          <TimeRangeToggle value={timeUnit} onChange={onTimeUnitChange} />
         )}
       </div>
 
