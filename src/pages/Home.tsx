@@ -12,7 +12,8 @@ import { AlertEventTable } from "@/components/tables/AlertEventTable";
 import { RankedList } from "@/components/misc/RankedList";
 import { resolveTimeRange } from "@/lib/resolveTimeRange";
 import { generateTrendSeries, reanchor } from "@/mocks/trend";
-import { STATUS_COLORS } from "@/tokens/colors";
+import { STATUS_COLORS, getResourceUsageStatus } from "@/tokens/colors";
+import type { StatusLevel } from "@/tokens/colors";
 import type { TopHeaderTimeUnit } from "@/components/layout/TopHeader/TopHeader.types";
 import type { TimeRangeUnit } from "@/components/layout/TimeRangeToggle";
 import {
@@ -32,6 +33,22 @@ import {
   homeAdapterRows,
 } from "@/mocks/home.mock";
 
+const CONTAINER_STATUS_LABEL: Record<StatusLevel, string> = {
+  normal: "정상",
+  warning: "경고",
+  critical: "오류",
+  info: "정보",
+  inactive: "비활성",
+};
+
+const CONTAINER_STATUS_ICON: Record<StatusLevel, string> = {
+  normal: "🟢",
+  warning: "🟠",
+  critical: "🔴",
+  info: "🔵",
+  inactive: "⚪",
+};
+
 interface HomeProps {
   dateRange?: { from: Date; to: Date };
   timeUnit?: TopHeaderTimeUnit;
@@ -43,6 +60,57 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
     () => resolveTimeRange(dateRange, timeUnit, lastRefresh),
     [dateRange, timeUnit, lastRefresh],
   );
+
+  const containerColumns = homeContainerColumns.map((col) => {
+    if (col.key === "cpuPct") {
+      return {
+        ...col,
+        render: (_value: unknown, row: (typeof homeContainerRows)[number]) => {
+          const color = STATUS_COLORS[getResourceUsageStatus(row.cpuPct).status];
+          const fillPct = Math.min((row.cpuPct / row.cpuLimitPct) * 100, 100);
+          return (
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-14 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${fillPct}%`, backgroundColor: color }}
+                />
+              </div>
+              <span className="text-xs tabular-nums" style={{ color }}>
+                {row.cpuPct}% / {row.cpuLimitPct}%
+              </span>
+            </div>
+          );
+        },
+      };
+    }
+    if (col.key === "memUsedGB") {
+      return {
+        ...col,
+        render: (_value: unknown, row: (typeof homeContainerRows)[number]) => {
+          const memPct = (row.memUsedGB / row.memTotalGB) * 100;
+          const color = STATUS_COLORS[getResourceUsageStatus(memPct).status];
+          return (
+            <span className="text-xs tabular-nums">
+              <span style={{ color, fontWeight: 600 }}>{row.memUsedGB}</span>
+              <span className="text-muted-foreground"> / {row.memTotalGB} GB</span>
+            </span>
+          );
+        },
+      };
+    }
+    if (col.key === "status") {
+      return {
+        ...col,
+        render: (_value: unknown, row: (typeof homeContainerRows)[number]) => (
+          <span>
+            {CONTAINER_STATUS_ICON[row.status]} {CONTAINER_STATUS_LABEL[row.status]}
+          </span>
+        ),
+      };
+    }
+    return col;
+  });
 
   // 2-6 트렌드 차트는 상단 헤더 기간과 별도로 자체 기간 선택을 가짐
   const [trendTimeUnit, setTrendTimeUnit] = useState<TimeRangeUnit>("1H");
@@ -180,20 +248,17 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
       </div>
 
       {/* 2-9: 컨테이너 리소스 사용량 */}
-      <SectionPanel compact title="Container Resource Usage">
-        <StatusDataTable
-          columns={homeContainerColumns}
-          data={homeContainerRows}
-        />
+      <SectionPanel compact title="컨테이너 리소스 사용량">
+        <StatusDataTable columns={containerColumns} data={homeContainerRows} />
       </SectionPanel>
 
       {/* 2-10: PPS Adapter/Agent 상태 */}
-      <SectionPanel compact title="PPS Adapter/Agent Status">
+      <SectionPanel compact title="PPS Adapter/Agent 상태">
         <StatusDataTable columns={homeAdapterColumns} data={homeAdapterRows} />
       </SectionPanel>
 
       {/* 2-11: 최근 알림 */}
-      <SectionPanel compact title="Recent Alerts">
+      <SectionPanel compact title="최근 알림">
         <AlertEventTable events={homeAlerts} showAckColumn />
       </SectionPanel>
     </div>

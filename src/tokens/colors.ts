@@ -33,3 +33,13 @@ export function getLagStatus(lag: number) {
 export function getProgressStatus(pct: number) {
   return PROGRESS_THRESHOLDS.find((t) => pct <= t.max)!;
 }
+
+export const RESOURCE_USAGE_THRESHOLDS = [
+  { max: 50, status: "normal" as const },
+  { max: 80, status: "warning" as const },
+  { max: Infinity, status: "critical" as const },
+];
+
+export function getResourceUsageStatus(pct: number) {
+  return RESOURCE_USAGE_THRESHOLDS.find((t) => pct <= t.max)!;
+}

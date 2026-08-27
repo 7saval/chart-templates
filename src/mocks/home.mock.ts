@@ -106,25 +106,41 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
     id: "src-kovis",
     type: "pipelineNode",
     position: { x: 0, y: 0 },
-    data: { name: "KOVIS", status: "normal", metrics: [{ label: "rec/s", value: 120 }] },
+    data: {
+      name: "KOVIS",
+      status: "normal",
+      metrics: [{ label: "rec/s", value: 120 }],
+    },
   },
   {
     id: "src-xrois",
     type: "pipelineNode",
     position: { x: 0, y: 160 },
-    data: { name: "XROIS", status: "normal", metrics: [{ label: "rec/s", value: 95 }] },
+    data: {
+      name: "XROIS",
+      status: "normal",
+      metrics: [{ label: "rec/s", value: 95 }],
+    },
   },
   {
     id: "src-iris",
     type: "pipelineNode",
     position: { x: 0, y: 320 },
-    data: { name: "IRIS", status: "normal", metrics: [{ label: "rec/s", value: 60 }] },
+    data: {
+      name: "IRIS",
+      status: "normal",
+      metrics: [{ label: "rec/s", value: 60 }],
+    },
   },
   {
     id: "src-kotris",
     type: "pipelineNode",
     position: { x: 0, y: 480 },
-    data: { name: "KOTRIS", status: "normal", metrics: [{ label: "rec/s", value: 40 }] },
+    data: {
+      name: "KOTRIS",
+      status: "normal",
+      metrics: [{ label: "rec/s", value: 40 }],
+    },
   },
   {
     id: "src-voc",
@@ -133,7 +149,10 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
     data: {
       name: "문서-VOC",
       status: "normal",
-      metrics: [{ label: "rec/s", value: 15 }, { label: "mode", value: "batch" }],
+      metrics: [
+        { label: "rec/s", value: 15 },
+        { label: "mode", value: "batch" },
+      ],
     },
   },
   {
@@ -146,7 +165,9 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
       subtitle: "실시간 변경 캡쳐",
       stats: ["9개 노드", "4.2K rec/s"],
       chartVariant: "bar",
-      sparklineData: toPoints([3.6, 3.9, 3.7, 4.0, 3.8, 4.1, 3.9, 4.3, 4.0, 4.2, 4.1, 4.2]),
+      sparklineData: toPoints([
+        3.6, 3.9, 3.7, 4.0, 3.8, 4.1, 3.9, 4.3, 4.0, 4.2, 4.1, 4.2,
+      ]),
     },
   },
   {
@@ -156,9 +177,14 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
     data: {
       name: "Adapter-DLHWP",
       status: "normal",
-      metrics: [{ label: "nodes", value: 1 }, { label: "mode", value: "batch" }],
+      metrics: [
+        { label: "nodes", value: 1 },
+        { label: "mode", value: "batch" },
+      ],
       chartVariant: "bar",
-      sparklineData: toPoints([0.8, 0.9, 1.0, 0.95, 1.1, 1.05, 0.9, 1.2, 1.0, 1.1, 0.95, 1.0]),
+      sparklineData: toPoints([
+        0.8, 0.9, 1.0, 0.95, 1.1, 1.05, 0.9, 1.2, 1.0, 1.1, 0.95, 1.0,
+      ]),
     },
   },
   {
@@ -171,7 +197,9 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
       subtitle: "Topic 88 · Part 352",
       stats: ["24 MB/s", "Lag 6.2K"],
       chartVariant: "bar",
-      sparklineData: toPoints([2200, 2350, 2300, 2450, 2380, 2500, 2300, 2420, 2350, 2480, 2400, 2450]),
+      sparklineData: toPoints([
+        2200, 2350, 2300, 2450, 2380, 2500, 2300, 2420, 2350, 2480, 2400, 2450,
+      ]),
     },
   },
   {
@@ -183,7 +211,9 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
       status: "normal",
       metrics: [{ label: "msg/s", value: 180 }],
       chartVariant: "bar",
-      sparklineData: toPoints([160, 175, 170, 185, 178, 190, 172, 188, 180, 195, 178, 182]),
+      sparklineData: toPoints([
+        160, 175, 170, 185, 178, 190, 172, 188, 180, 195, 178, 182,
+      ]),
     },
   },
   {
@@ -195,7 +225,9 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
       status: "normal",
       metrics: [{ label: "write/h", value: 1_240 }],
       chartVariant: "bar",
-      sparklineData: toPoints([1150, 1200, 1180, 1250, 1220, 1280, 1200, 1260, 1240, 1300, 1220, 1240]),
+      sparklineData: toPoints([
+        1150, 1200, 1180, 1250, 1220, 1280, 1200, 1260, 1240, 1300, 1220, 1240,
+      ]),
     },
   },
   {
@@ -208,8 +240,8 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
       metrics: [{ label: "Lag", value: "210,000" }],
       chartVariant: "bar",
       sparklineData: toPoints([
-        150_000, 165_000, 170_000, 180_000, 175_000, 190_000, 195_000, 200_000, 205_000, 208_000, 210_000,
-        210_000,
+        150_000, 165_000, 170_000, 180_000, 175_000, 190_000, 195_000, 200_000,
+        205_000, 208_000, 210_000, 210_000,
       ]),
     },
   },
@@ -220,7 +252,10 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
     data: {
       name: "MinIO/NAS",
       status: "normal",
-      metrics: [{ label: "util", value: "68%" }, { label: "freshness", value: "2m" }],
+      metrics: [
+        { label: "util", value: "68%" },
+        { label: "freshness", value: "2m" },
+      ],
       chartVariant: "bar",
       sparklineData: toPoints([60, 62, 65, 63, 67, 66, 68, 65, 69, 67, 68, 68]),
     },
@@ -232,9 +267,15 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
     data: {
       name: "SPARK",
       status: "normal",
-      metrics: [{ label: "docs/hr", value: "18.2k" }, { label: "state", value: "running" }],
+      metrics: [
+        { label: "docs/hr", value: "18.2k" },
+        { label: "state", value: "running" },
+      ],
       chartVariant: "bar",
-      sparklineData: toPoints([16500, 17000, 16800, 17500, 17200, 18000, 17600, 18500, 18000, 18800, 18200, 18200]),
+      sparklineData: toPoints([
+        16500, 17000, 16800, 17500, 17200, 18000, 17600, 18500, 18000, 18800,
+        18200, 18200,
+      ]),
     },
   },
   {
@@ -244,7 +285,10 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
     data: {
       name: "TRINO",
       status: "normal",
-      metrics: [{ label: "qps", value: 42 }, { label: "state", value: "running" }],
+      metrics: [
+        { label: "qps", value: 42 },
+        { label: "state", value: "running" },
+      ],
       chartVariant: "bar",
       sparklineData: toPoints([35, 38, 36, 40, 39, 44, 41, 45, 40, 43, 42, 42]),
     },
@@ -270,7 +314,9 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
       status: "normal",
       metrics: [{ label: "qps", value: 9 }],
       chartVariant: "bar",
-      sparklineData: toPoints([7, 8, 7.5, 8.5, 8, 9.2, 8.8, 9.5, 9, 9.8, 9.2, 9]),
+      sparklineData: toPoints([
+        7, 8, 7.5, 8.5, 8, 9.2, 8.8, 9.5, 9, 9.8, 9.2, 9,
+      ]),
     },
   },
 ];
@@ -286,7 +332,12 @@ export const homeFlowEdges: PipelineFlowEdgeType[] = [
   { id: "e-realtime-c1", source: "kafka-realtime", target: "iceberg-c1" },
   { id: "e-batch-c2", source: "kafka-batch", target: "iceberg-c2" },
   { id: "e-c1-minio", source: "iceberg-c1", target: "minio" },
-  { id: "e-c2-minio", source: "iceberg-c2", target: "minio", data: { isBottleneck: true } },
+  {
+    id: "e-c2-minio",
+    source: "iceberg-c2",
+    target: "minio",
+    data: { isBottleneck: true },
+  },
   { id: "e-minio-spark", source: "minio", target: "spark" },
   { id: "e-spark-trino", source: "spark", target: "trino" },
   { id: "e-spark-milvus", source: "spark", target: "milvus" },
@@ -339,7 +390,9 @@ export const homeStorageKpis: KpiCardData[] = [
     deltaPct: 2.1,
     compareLabel: "vs yesterday",
     chartVariant: "bar",
-    trend: toPoints([128, 132, 130, 135, 133, 138, 134, 140, 136, 141, 138, 142]),
+    trend: toPoints([
+      128, 132, 130, 135, 133, 138, 134, 140, 136, 141, 138, 142,
+    ]),
   },
   {
     label: "Trino Queries",
@@ -348,7 +401,9 @@ export const homeStorageKpis: KpiCardData[] = [
     deltaPct: 4.6,
     compareLabel: "vs yesterday",
     chartVariant: "bar",
-    trend: toPoints([7800, 8000, 7900, 8100, 8050, 8300, 8150, 8400, 8200, 8350, 8180, 8240]),
+    trend: toPoints([
+      7800, 8000, 7900, 8100, 8050, 8300, 8150, 8400, 8200, 8350, 8180, 8240,
+    ]),
   },
 ];
 
@@ -381,27 +436,102 @@ interface ContainerRow extends Record<string, unknown> {
   id: string;
   container: string;
   role: string;
-  cpu: string;
-  memory: string;
-  netIO: string;
+  cpuPct: number;
+  cpuLimitPct: number;
+  memUsedGB: number;
+  memTotalGB: number;
+  netInMbps: number;
+  netOutMbps: number;
   status: StatusLevel;
 }
 
 export const homeContainerColumns: TableColumn<ContainerRow>[] = [
-  { key: "container", header: "Container / Node", sortable: true },
-  { key: "role", header: "Role" },
-  { key: "cpu", header: "CPU", sortable: true },
-  { key: "memory", header: "Memory", sortable: true },
-  { key: "netIO", header: "Network (In/Out)" },
-  { key: "status", header: "Status", statusKey: "status" },
+  { key: "container", header: "컨테이너 / 노드", sortable: true },
+  { key: "role", header: "역할" },
+  { key: "cpuPct", header: "CPU", sortable: true },
+  { key: "memUsedGB", header: "Memory", sortable: true },
+  {
+    key: "netInMbps",
+    header: "Network (In / Out)",
+    render: (_value, row) =>
+      `${row.netInMbps} Mbps / ${row.netOutMbps} Mbps`,
+  },
+  { key: "status", header: "상태", statusKey: "status" },
 ];
 
 export const homeContainerRows: ContainerRow[] = [
-  { id: "1", container: "cdc-collector-1", role: "CDC", cpu: "34%", memory: "2.1 GB", netIO: "12 / 8 MB/s", status: "normal" },
-  { id: "2", container: "kafka-broker-3", role: "Kafka", cpu: "78%", memory: "6.4 GB", netIO: "88 / 64 MB/s", status: "warning" },
-  { id: "3", container: "iceberg-sink-c1", role: "Iceberg Sink", cpu: "41%", memory: "3.2 GB", netIO: "24 / 18 MB/s", status: "normal" },
-  { id: "4", container: "spark-worker-2", role: "Spark", cpu: "56%", memory: "12.8 GB", netIO: "40 / 30 MB/s", status: "normal" },
-  { id: "5", container: "milvus-writer", role: "Vector DB", cpu: "22%", memory: "4.6 GB", netIO: "6 / 4 MB/s", status: "normal" },
+  {
+    id: "1",
+    container: "adapter-cdc-1",
+    role: "PPS Adapter",
+    cpuPct: 32,
+    cpuLimitPct: 80,
+    memUsedGB: 1.2,
+    memTotalGB: 4.0,
+    netInMbps: 180,
+    netOutMbps: 90,
+    status: "normal",
+  },
+  {
+    id: "2",
+    container: "adapter-dlhwp-1",
+    role: "PPS Adapter (Batch)",
+    cpuPct: 26,
+    cpuLimitPct: 80,
+    memUsedGB: 1.0,
+    memTotalGB: 4.0,
+    netInMbps: 120,
+    netOutMbps: 60,
+    status: "normal",
+  },
+  {
+    id: "3",
+    container: "agent-dlhwp-1",
+    role: "PPS Agent",
+    cpuPct: 41,
+    cpuLimitPct: 80,
+    memUsedGB: 2.6,
+    memTotalGB: 6.0,
+    netInMbps: 200,
+    netOutMbps: 110,
+    status: "normal",
+  },
+  {
+    id: "4",
+    container: "kafka-broker-1",
+    role: "Kafka Broker",
+    cpuPct: 39,
+    cpuLimitPct: 80,
+    memUsedGB: 3.1,
+    memTotalGB: 8.0,
+    netInMbps: 250,
+    netOutMbps: 250,
+    status: "normal",
+  },
+  {
+    id: "5",
+    container: "spark-worker-1",
+    role: "Spark Worker",
+    cpuPct: 62,
+    cpuLimitPct: 80,
+    memUsedGB: 6.8,
+    memTotalGB: 12,
+    netInMbps: 300,
+    netOutMbps: 280,
+    status: "warning",
+  },
+  {
+    id: "6",
+    container: "trino-worker-1",
+    role: "Trino Worker",
+    cpuPct: 55,
+    cpuLimitPct: 80,
+    memUsedGB: 5.2,
+    memTotalGB: 12,
+    netInMbps: 210,
+    netOutMbps: 190,
+    status: "normal",
+  },
 ];
 
 // 2-10. PPS Adapter/Agent Status Table
@@ -421,13 +551,56 @@ export const homeAdapterColumns: TableColumn<AdapterRow>[] = [
   { key: "type", header: "Type" },
   { key: "source", header: "Source" },
   { key: "status", header: "Status", statusKey: "status" },
-  { key: "ingestRate", header: "Ingest (rec/s)", sortable: true, render: (v) => (v as number).toLocaleString() },
-  { key: "sendRate", header: "Send (rec/s)", sortable: true, render: (v) => (v as number).toLocaleString() },
-  { key: "lag", header: "Lag", sortable: true, statusKey: "status", render: (v) => (v as number).toLocaleString() },
+  {
+    key: "ingestRate",
+    header: "Ingest (rec/s)",
+    sortable: true,
+    render: (v) => (v as number).toLocaleString(),
+  },
+  {
+    key: "sendRate",
+    header: "Send (rec/s)",
+    sortable: true,
+    render: (v) => (v as number).toLocaleString(),
+  },
+  {
+    key: "lag",
+    header: "Lag",
+    sortable: true,
+    statusKey: "status",
+    render: (v) => (v as number).toLocaleString(),
+  },
 ];
 
 export const homeAdapterRows: AdapterRow[] = [
-  { id: "1", name: "Adapter-CDC-01", type: "CDC", source: "KOVIS", status: "normal", ingestRate: 120, sendRate: 118, lag: 40 },
-  { id: "2", name: "Adapter-CDC-02", type: "CDC", source: "XROIS", status: "normal", ingestRate: 95, sendRate: 94, lag: 30 },
-  { id: "3", name: "Adapter-DLHWP-01", type: "Batch", source: "문서-VOC", status: "warning", ingestRate: 15, sendRate: 9, lag: 2_400 },
+  {
+    id: "1",
+    name: "Adapter-CDC-01",
+    type: "CDC",
+    source: "KOVIS",
+    status: "normal",
+    ingestRate: 120,
+    sendRate: 118,
+    lag: 40,
+  },
+  {
+    id: "2",
+    name: "Adapter-CDC-02",
+    type: "CDC",
+    source: "XROIS",
+    status: "normal",
+    ingestRate: 95,
+    sendRate: 94,
+    lag: 30,
+  },
+  {
+    id: "3",
+    name: "Adapter-DLHWP-01",
+    type: "Batch",
+    source: "문서-VOC",
+    status: "warning",
+    ingestRate: 15,
+    sendRate: 9,
+    lag: 2_400,
+  },
 ];
