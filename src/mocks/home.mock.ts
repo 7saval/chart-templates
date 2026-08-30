@@ -115,7 +115,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "src-xrois",
     type: "pipelineNode",
-    position: { x: 0, y: 160 },
+    position: { x: 0, y: 110 },
     data: {
       name: "XROIS",
       status: "normal",
@@ -125,7 +125,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "src-iris",
     type: "pipelineNode",
-    position: { x: 0, y: 320 },
+    position: { x: 0, y: 220 },
     data: {
       name: "IRIS",
       status: "normal",
@@ -135,7 +135,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "src-kotris",
     type: "pipelineNode",
-    position: { x: 0, y: 480 },
+    position: { x: 0, y: 330 },
     data: {
       name: "KOTRIS",
       status: "normal",
@@ -145,7 +145,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "src-voc",
     type: "pipelineNode",
-    position: { x: 0, y: 640 },
+    position: { x: 0, y: 440 },
     data: {
       name: "문서-VOC",
       status: "normal",
@@ -158,7 +158,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "adapter-cdc",
     type: "pipelineNode",
-    position: { x: 280, y: 200 },
+    position: { x: 280, y: 130 },
     data: {
       name: "Adapter-CDC",
       status: "normal",
@@ -173,7 +173,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "adapter-dlhwp",
     type: "pipelineNode",
-    position: { x: 280, y: 520 },
+    position: { x: 280, y: 300 },
     data: {
       name: "Adapter-DLHWP",
       status: "normal",
@@ -190,7 +190,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "kafka-realtime",
     type: "pipelineNode",
-    position: { x: 560, y: 200 },
+    position: { x: 560, y: 130 },
     data: {
       name: "RealTime Topics",
       status: "normal",
@@ -205,7 +205,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "kafka-batch",
     type: "pipelineNode",
-    position: { x: 560, y: 520 },
+    position: { x: 560, y: 300 },
     data: {
       name: "Kafka Batch Topics",
       status: "normal",
@@ -219,7 +219,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "iceberg-c1",
     type: "pipelineNode",
-    position: { x: 840, y: 200 },
+    position: { x: 840, y: 130 },
     data: {
       name: "Iceberg Sink (C1)",
       status: "normal",
@@ -233,7 +233,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "iceberg-c2",
     type: "pipelineNode",
-    position: { x: 840, y: 520 },
+    position: { x: 840, y: 300 },
     data: {
       name: "PPS Agent DLHWP (C2)",
       status: "warning",
@@ -248,7 +248,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "minio",
     type: "pipelineNode",
-    position: { x: 1120, y: 360 },
+    position: { x: 1120, y: 215 },
     data: {
       name: "MinIO/NAS",
       status: "normal",
@@ -263,7 +263,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "spark",
     type: "pipelineNode",
-    position: { x: 1380, y: 360 },
+    position: { x: 1380, y: 215 },
     data: {
       name: "SPARK",
       status: "normal",
@@ -281,7 +281,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "trino",
     type: "pipelineNode",
-    position: { x: 1640, y: 260 },
+    position: { x: 1640, y: 130 },
     data: {
       name: "TRINO",
       status: "normal",
@@ -296,7 +296,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "milvus",
     type: "pipelineNode",
-    position: { x: 1640, y: 480 },
+    position: { x: 1640, y: 300 },
     data: {
       name: "Vector DB (Milvus)",
       status: "critical",
@@ -308,7 +308,7 @@ export const homeFlowNodes: PipelineFlowNodeType[] = [
   {
     id: "ai-agent",
     type: "pipelineNode",
-    position: { x: 1900, y: 360 },
+    position: { x: 1900, y: 215 },
     data: {
       name: "AI Agent/RAG Search",
       status: "normal",
@@ -453,8 +453,7 @@ export const homeContainerColumns: TableColumn<ContainerRow>[] = [
   {
     key: "netInMbps",
     header: "Network (In / Out)",
-    render: (_value, row) =>
-      `${row.netInMbps} Mbps / ${row.netOutMbps} Mbps`,
+    render: (_value, row) => `${row.netInMbps} Mbps / ${row.netOutMbps} Mbps`,
   },
   { key: "status", header: "상태", statusKey: "status" },
 ];
@@ -547,25 +546,25 @@ interface AdapterRow extends Record<string, unknown> {
 }
 
 export const homeAdapterColumns: TableColumn<AdapterRow>[] = [
-  { key: "name", header: "Name", sortable: true },
-  { key: "type", header: "Type" },
-  { key: "source", header: "Source" },
-  { key: "status", header: "Status", statusKey: "status" },
+  { key: "name", header: "이름", sortable: true },
+  { key: "type", header: "타입" },
+  { key: "source", header: "소스" },
+  { key: "status", header: "상태", statusKey: "status" },
   {
     key: "ingestRate",
-    header: "Ingest (rec/s)",
+    header: "수집량 (rec/s)",
     sortable: true,
     render: (v) => (v as number).toLocaleString(),
   },
   {
     key: "sendRate",
-    header: "Send (rec/s)",
+    header: "전송량 (rec/s)",
     sortable: true,
     render: (v) => (v as number).toLocaleString(),
   },
   {
     key: "lag",
-    header: "Lag",
+    header: "지연",
     sortable: true,
     statusKey: "status",
     render: (v) => (v as number).toLocaleString(),

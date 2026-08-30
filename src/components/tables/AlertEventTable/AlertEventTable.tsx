@@ -46,31 +46,44 @@ export function AlertEventTable({
   events,
   isLoading,
   showAckColumn,
+  filter,
+  onFilterChange,
 }: AlertEventTableProps) {
-  const [filter, setFilter] = useState<"ALL" | AlertServerity>("ALL");
+  const [internalFilter, setInternalFilter] = useState<"ALL" | AlertServerity>(
+    "ALL",
+  );
+  const isControlled = filter !== undefined && onFilterChange !== undefined;
+  const activeFilter = isControlled ? filter : internalFilter;
 
   if (isLoading) return <Skeleton className="h-40 w-full" />;
   const filtered =
-    filter === "ALL" ? events : events.filter((e) => e.serverity === filter);
+    activeFilter === "ALL"
+      ? events
+      : events.filter((e) => e.serverity === activeFilter);
 
   return (
     <div>
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-        <TabsList>
-          <TabsTrigger value="ALL">ALL</TabsTrigger>
-          <TabsTrigger value="Critical">Critical</TabsTrigger>
-          <TabsTrigger value="Warning">Warning</TabsTrigger>
-          <TabsTrigger value="Info">Info</TabsTrigger>
-        </TabsList>
-      </Tabs>
-      <Table className="mt-3">
+      {!isControlled && (
+        <Tabs
+          value={activeFilter}
+          onValueChange={(v) => setInternalFilter(v as typeof activeFilter)}
+        >
+          <TabsList>
+            <TabsTrigger value="ALL">ALL</TabsTrigger>
+            <TabsTrigger value="Critical">Critical</TabsTrigger>
+            <TabsTrigger value="Warning">Warning</TabsTrigger>
+            <TabsTrigger value="Info">Info</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+      <Table className={isControlled ? undefined : "mt-3"}>
         <TableHeader>
           <TableRow>
-            <TableHead>Time</TableHead>
-            <TableHead>Severity</TableHead>
-            <TableHead>Message</TableHead>
-            <TableHead>Target</TableHead>
-            {showAckColumn && <TableHead>Status</TableHead>}
+            <TableHead>시간</TableHead>
+            <TableHead>심각도</TableHead>
+            <TableHead>이벤트</TableHead>
+            <TableHead>대상</TableHead>
+            {showAckColumn && <TableHead>상태</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -9,11 +9,13 @@ import { PipelineFlowDiagram } from "@/components/flow/PipelineFlowDiagram/Pipel
 import { PipelineFlowNode } from "@/components/flow/PipelineFlowNode";
 import { StatusDataTable } from "@/components/tables/StatusDataTable";
 import { AlertEventTable } from "@/components/tables/AlertEventTable";
+import type { AlertServerity } from "@/components/tables/AlertEventTable";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RankedList } from "@/components/misc/RankedList";
 import { resolveTimeRange } from "@/lib/resolveTimeRange";
 import { generateTrendSeries, reanchor } from "@/mocks/trend";
 import { STATUS_COLORS, getResourceUsageStatus } from "@/tokens/colors";
-import type { StatusLevel } from "@/tokens/colors";
+import { renderStatusIcon } from "@/lib/statusDisplay";
 import type { TopHeaderTimeUnit } from "@/components/layout/TopHeader/TopHeader.types";
 import type { TimeRangeUnit } from "@/components/layout/TimeRangeToggle";
 import {
@@ -33,22 +35,6 @@ import {
   homeAdapterRows,
 } from "@/mocks/home.mock";
 
-const CONTAINER_STATUS_LABEL: Record<StatusLevel, string> = {
-  normal: "정상",
-  warning: "경고",
-  critical: "오류",
-  info: "정보",
-  inactive: "비활성",
-};
-
-const CONTAINER_STATUS_ICON: Record<StatusLevel, string> = {
-  normal: "🟢",
-  warning: "🟠",
-  critical: "🔴",
-  info: "🔵",
-  inactive: "⚪",
-};
-
 interface HomeProps {
   dateRange?: { from: Date; to: Date };
   timeUnit?: TopHeaderTimeUnit;
@@ -66,7 +52,8 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
       return {
         ...col,
         render: (_value: unknown, row: (typeof homeContainerRows)[number]) => {
-          const color = STATUS_COLORS[getResourceUsageStatus(row.cpuPct).status];
+          const color =
+            STATUS_COLORS[getResourceUsageStatus(row.cpuPct).status];
           const fillPct = Math.min((row.cpuPct / row.cpuLimitPct) * 100, 100);
           return (
             <div className="flex items-center gap-2">
@@ -93,7 +80,10 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
           return (
             <span className="text-xs tabular-nums">
               <span style={{ color, fontWeight: 600 }}>{row.memUsedGB}</span>
-              <span className="text-muted-foreground"> / {row.memTotalGB} GB</span>
+              <span className="text-muted-foreground">
+                {" "}
+                / {row.memTotalGB} GB
+              </span>
             </span>
           );
         },
@@ -102,15 +92,65 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
     if (col.key === "status") {
       return {
         ...col,
-        render: (_value: unknown, row: (typeof homeContainerRows)[number]) => (
-          <span>
-            {CONTAINER_STATUS_ICON[row.status]} {CONTAINER_STATUS_LABEL[row.status]}
-          </span>
-        ),
+        render: (_value: unknown, row: (typeof homeContainerRows)[number]) =>
+          renderStatusIcon(row.status),
       };
     }
     return col;
   });
+
+  const adapterColumns = homeAdapterColumns.map((col) => {
+    if (col.key === "status") {
+      return {
+        ...col,
+        render: (_value: unknown, row: (typeof homeAdapterRows)[number]) =>
+          renderStatusIcon(row.status),
+      };
+    }
+    return col;
+  });
+
+  // 2-11 알림&이벤트 패널 헤더의 탭: 전체/심각도별 건수를 보여주는 동시에 테이블 필터로 동작
+  const [alertFilter, setAlertFilter] = useState<"ALL" | AlertServerity>("ALL");
+  const alertCounts = {
+    Critical: homeAlerts.filter((a) => a.serverity === "Critical").length,
+    Warning: homeAlerts.filter((a) => a.serverity === "Warning").length,
+    Info: homeAlerts.filter((a) => a.serverity === "Info").length,
+  };
+  const alertFilterTabs = (
+    <Tabs
+      value={alertFilter}
+      onValueChange={(v) => setAlertFilter(v as typeof alertFilter)}
+    >
+      <TabsList className="group-data-horizontal/tabs:h-10 gap-1 p-1">
+        <TabsTrigger value="ALL" className="gap-2 px-4 py-1.5 text-base">
+          <span className="size-2.5 rounded-full bg-muted-foreground" />
+          전체 {homeAlerts.length}
+        </TabsTrigger>
+        <TabsTrigger value="Critical" className="gap-2 px-4 py-1.5 text-base">
+          <span
+            className="size-2.5 rounded-full"
+            style={{ backgroundColor: STATUS_COLORS.critical }}
+          />
+          Critical {alertCounts.Critical}
+        </TabsTrigger>
+        <TabsTrigger value="Warning" className="gap-2 px-4 py-1.5 text-base">
+          <span
+            className="size-2.5 rounded-full"
+            style={{ backgroundColor: STATUS_COLORS.warning }}
+          />
+          Warning {alertCounts.Warning}
+        </TabsTrigger>
+        <TabsTrigger value="Info" className="gap-2 px-4 py-1.5 text-base">
+          <span
+            className="size-2.5 rounded-full"
+            style={{ backgroundColor: STATUS_COLORS.info }}
+          />
+          Info {alertCounts.Info}
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
+  );
 
   // 2-6 트렌드 차트는 상단 헤더 기간과 별도로 자체 기간 선택을 가짐
   const [trendTimeUnit, setTrendTimeUnit] = useState<TimeRangeUnit>("1H");
@@ -195,7 +235,7 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
           nodes={homeFlowNodes}
           edges={homeFlowEdges}
           direction="horizontal"
-          height={600}
+          height={500}
           range={range}
           anchor={lastRefresh.getTime()}
         />
@@ -254,12 +294,17 @@ export default function Home({ dateRange, timeUnit, lastRefresh }: HomeProps) {
 
       {/* 2-10: PPS Adapter/Agent 상태 */}
       <SectionPanel compact title="PPS Adapter/Agent 상태">
-        <StatusDataTable columns={homeAdapterColumns} data={homeAdapterRows} />
+        <StatusDataTable columns={adapterColumns} data={homeAdapterRows} />
       </SectionPanel>
 
       {/* 2-11: 최근 알림 */}
-      <SectionPanel compact title="최근 알림">
-        <AlertEventTable events={homeAlerts} showAckColumn />
+      <SectionPanel compact title="알림&이벤트" actions={alertFilterTabs}>
+        <AlertEventTable
+          events={homeAlerts}
+          showAckColumn
+          filter={alertFilter}
+          onFilterChange={setAlertFilter}
+        />
       </SectionPanel>
     </div>
   );
