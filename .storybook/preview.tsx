@@ -1,3 +1,6 @@
+if (import.meta.env.DEV) {
+  import("react-grab");
+}
 import type { Preview } from '@storybook/react-vite'
 import '@/index.css'
 import '@xyflow/react/dist/style.css'
